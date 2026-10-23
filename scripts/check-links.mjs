@@ -134,7 +134,15 @@ try {
       alt: image.getAttribute("alt"),
     }));
     for (const image of images) {
-      if (!image.hasAlt) failures.push("Image is missing an alt attribute: " + image.src);
+      if (!image.hasAlt) {
+        failures.push("Image is missing an alt attribute: " + image.src);
+        continue;
+      }
+      const element = [...document.querySelectorAll("img")].find((candidate) => (candidate.currentSrc || candidate.getAttribute("src") || "") === image.src);
+      const decorative = element?.getAttribute("aria-hidden") === "true" ||
+        ["presentation", "none"].includes(element?.getAttribute("role"));
+      if (decorative && image.alt !== "") failures.push("Decorative image must use empty alt text: " + image.src);
+      if (!decorative && !image.alt.trim()) failures.push("Informative image needs concise alternative text: " + image.src);
     }
     const graphics = [...document.querySelectorAll("svg")].map((svg) => ({
       className: typeof svg.className === "object" ? svg.className.baseVal : svg.className,
