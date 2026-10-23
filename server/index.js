@@ -83,6 +83,28 @@ async function route(request, response) {
     const pickupAt=new Date(input.pickupAt),deadline=new Date(input.deadline),location=typeof input.location==="string"?input.location.trim():"",handling=typeof input.handling==="string"?input.handling.trim():"";
     const types=new Set(["prepared","perishable","raw","medical","infant_formula","essential"]);
     if(!donor||donor.length>180||!name||name.length>180||!types.has(type)||!Number.isSafeInteger(quantity)||quantity<1||quantity>100000||!Number.isFinite(pickupAt.getTime())||!Number.isFinite(deadline.getTime())||pickupAt>=deadline||deadline<=new Date()||!location||location.length>300||handling.length>500){sendJson(response,400,{error:"Check donor, batch name, aid type, quantity, pickup window, future safe-use deadline, location, and handling notes."},headers);return;}
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    const turnstileToken = typeof input.turnstileToken === "string" ? input.turnstileToken : "";
+    if (!turnstileSecret) { sendJson(response, 503, { error: "Bot protection is not configured on the server." }, headers); return; }
+    if (!turnstileToken || turnstileToken.length > 2048) { sendJson(response, 400, { error: "Complete security verification and try again." }, headers); return; }
+    let verification;
+    try {
+      const verifyResponse = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ secret: turnstileSecret, response: turnstileToken, idempotency_key: crypto.randomUUID() }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!verifyResponse.ok) throw new Error("Siteverify returned a non-success status");
+      verification = await verifyResponse.json();
+    } catch (error) {
+      console.error("Turnstile verification unavailable:", error.message);
+      sendJson(response, 503, { error: "Security verification is temporarily unavailable. Please retry." }, headers); return;
+    }
+    const expectedHostname = process.env.TURNSTILE_EXPECTED_HOSTNAME;
+    if (!verification.success || verification.action !== "aid_batch_register" || (expectedHostname && verification.hostname !== expectedHostname)) {
+      console.warn("Turnstile rejected an aid batch submission.");
+      sendJson(response, 400, { error: "Security verification failed or expired. Complete the check again." }, headers); return;
+    }
     const client=await pool.connect();
     try{await client.query("BEGIN");const id="B-"+crypto.randomUUID().replaceAll("-","").slice(0,5).toUpperCase();
       await client.query(`INSERT INTO aid_batches (id,donor,name,aid_type,original_quantity,available_quantity,reserved_quantity,picked_quantity,delivered_quantity,rejected_quantity,pickup_at,safe_use_deadline,location,handling_notes) VALUES ($1,$2,$3,$4,$5,$5,0,0,0,0,$6,$7,$8,$9)`,[id,donor,name,type,quantity,pickupAt.toISOString(),deadline.toISOString(),location,handling]);
