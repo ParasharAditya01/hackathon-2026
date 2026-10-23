@@ -16,6 +16,39 @@ const navItems = [
   ["Riders", Bike], ["Receiving sites", Warehouse], ["Reservations", Clock3],
   ["Alerts & audit", Activity], ["Resilience lab", Zap]
 ];
+
+const pageRoutes = {
+  Overview: "overview-page",
+  "Aid batches": "aid-batches-page",
+  "Dispatch board": "dispatch-board-page",
+  Riders: "riders-page",
+  "Receiving sites": "receiving-sites-page",
+  Reservations: "reservations-page",
+  "Alerts & audit": "alerts-audit-page",
+  "Resilience lab": "resilience-lab-page",
+};
+const relatedPages = {
+  Overview: ["Aid batches", "Dispatch board", "Resilience lab"],
+  "Aid batches": ["Dispatch board", "Receiving sites"],
+  "Dispatch board": ["Aid batches", "Riders", "Receiving sites", "Reservations"],
+  Riders: ["Dispatch board", "Reservations"],
+  "Receiving sites": ["Dispatch board", "Aid batches"],
+  Reservations: ["Dispatch board", "Alerts & audit"],
+  "Alerts & audit": ["Reservations", "Dispatch board", "Resilience lab"],
+  "Resilience lab": ["Dispatch board", "Receiving sites", "Alerts & audit"],
+};
+
+function PageLink({ to, onNavigate, children, className = "contextual-link" }) {
+  return <a className={className} href={"#" + pageRoutes[to]} onClick={(event) => { event.preventDefault(); onNavigate(to); }}>{children}</a>;
+}
+
+function RelatedLinks({ page, onNavigate }) {
+  return <nav className="related-links" aria-label={"Related pages for " + page}>
+    <span className="related-links-label">RELATED WORK</span>
+    <div>{(relatedPages[page] || []).map((label) => <PageLink key={label} to={label} onNavigate={onNavigate}>{label}<ArrowRight size={13} aria-hidden="true" /></PageLink>)}</div>
+  </nav>;
+}
+
 const shortTime = (value) => new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const dateTimeLocal = (offsetMinutes = 0) => {
   const d = new Date(Date.now() + offsetMinutes * 60000);
@@ -418,6 +451,7 @@ export default function App() {
     Riders: renderRiders, "Receiving sites": renderSites, Reservations: renderReservations,
     "Alerts & audit": renderAlerts, "Resilience lab": renderScenarios
   }[page]();
+  const pageWithRelatedLinks = <div className="page-route" id={pageRoutes[page]}>{pageContent}<RelatedLinks page={page} onNavigate={navigateTo} /></div>;
 
   if (!entered) return <LandingPage onEnter={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setEntered(true); }} onExplore={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setPage("Resilience lab"); setEntered(true); }} />;
 
@@ -432,8 +466,8 @@ export default function App() {
     </aside>
     <main className="main-content" id="overview"><header className="topbar">
       {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
-      <div className="breadcrumb"><span>AidFlow</span><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
-    </header><div className="page-wrap">{pageContent}<footer className="app-footer"><span><span className="footer-mark"><AidFlowMark /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></footer></div></main>
+      <div className="breadcrumb"><PageLink to="Overview" onNavigate={navigateTo} className="breadcrumb-home">AidFlow</PageLink><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
+    </header><div className="page-wrap">{pageWithRelatedLinks}<footer className="app-footer"><div className="app-footer-brand"><span><span className="footer-mark"><AidFlowMark /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></div><nav className="footer-nav" aria-label="Quick links"><PageLink to="Overview" onNavigate={navigateTo} className="footer-nav-link">Overview</PageLink><PageLink to="Aid batches" onNavigate={navigateTo} className="footer-nav-link">Aid batches</PageLink><PageLink to="Dispatch board" onNavigate={navigateTo} className="footer-nav-link">Dispatch board</PageLink><PageLink to="Reservations" onNavigate={navigateTo} className="footer-nav-link">Reservations</PageLink><PageLink to="Resilience lab" onNavigate={navigateTo} className="footer-nav-link">Resilience lab</PageLink></nav></footer></div></main>
     {toast && <div className="toast-message" role="status" aria-live="polite">{toast}</div>}
   </div>;
 }
