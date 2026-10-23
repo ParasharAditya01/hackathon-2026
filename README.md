@@ -12,6 +12,8 @@ Requirements: Node.js 20+ and npm.
 Open the local URL printed by Vite. To run domain tests and verify a production build:
 
     npm test
+    npm run test:links
+    npm run test:responsive
     npm run build
     npm run preview
 
@@ -36,6 +38,7 @@ Open the local URL printed by Vite. To run domain tests and verify a production 
 - **Operational controls:** manage rider availability, site status and demand, review alerts, inspect an audit trail, and reset synthetic demo records.
 - **Judge resilience lab:** urgent expiry, 180-unit split delivery with 40-unit rider capacity, a 30-minute unresponsive-volunteer simulation, direct drop-off filling demand during transit, shelter closure during transit, and missing cooking resources.
 - **Domain tests and CI:** Node's built-in test runner covers split allocation, idempotent claim expiry, safe-use quarantine, resource compatibility, reservation-to-pickup inventory movement, direct-drop recovery, and deadline safety. GitHub Actions runs tests and a Vite production build on pushes and pull requests.
+- **Link audit:** `npm run test:links` checks landing-page anchors, the workspace brand target, all eight workspace navigation destinations, and any external anchor URLs. External destinations that block automated requests are reported as unverified instead of being silently treated as healthy.
 
 ## Core inventory rules
 
