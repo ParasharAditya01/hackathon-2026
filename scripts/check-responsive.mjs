@@ -183,7 +183,12 @@ try {
       await menuButton.click();
       await page.locator(".sidebar.is-mobile-open").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "true") throw new Error("Mobile menu button did not expose expanded state");
-      if (!(await page.locator(".sidebar .nav-item").first().evaluate(element => element === document.activeElement))) throw new Error("Opening the mobile menu did not move focus to navigation");
+      await page.waitForFunction(() => {
+        const firstItem = document.querySelector(".sidebar .nav-item");
+        return firstItem && firstItem === document.activeElement;
+      }, null, { timeout: 3000 }).catch(() => {
+        throw new Error("Opening the mobile menu did not move focus to navigation");
+      });
       await page.keyboard.press("Tab");
       if (!(await page.locator(".sidebar .nav-item").nth(1).evaluate(element => element === document.activeElement))) throw new Error("Tab did not move focus through mobile navigation");
       await page.keyboard.press("Shift+Tab");
