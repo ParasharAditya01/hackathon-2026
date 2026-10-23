@@ -222,7 +222,7 @@ try {
   page.once("dialog", dialog => dialog.accept("10.5"));
   await siteCard.getByRole("button", { name: "Record direct drop-off" }).click();
   await page.getByText("Direct drop-off must be a positive whole number of units.").waitFor();
-  if (!(await siteCard.locator(".site-demand").innerText()).includes("0")) {
+  if ((await siteCard.locator(".site-demand > div").nth(1).locator("strong").innerText()).trim() !== "0") {
     throw new Error("Invalid fractional direct drop-off changed delivered inventory.");
   }
   page.once("dialog", dialog => dialog.accept("10"));
