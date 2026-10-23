@@ -24,6 +24,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify internal and external links
         run: npm run test:links
+      - name: Verify actual control behavior and state transitions
+        run: npm run test:interactions
       - name: Verify horizontal overflow across viewport sizes and views
         run: npm run test:responsive
       - name: Build production bundle
