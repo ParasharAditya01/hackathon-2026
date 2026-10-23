@@ -393,7 +393,7 @@ export function runScenario(state, scenarioKey, now = Date.now()) {
     lines.push("The engine still requires travel time plus the safety buffer; urgency never overrides feasibility.");
   } else if (scenarioKey === "split") {
     const d = state.donations.find(x => x.id === "B-180") || state.donations.find(x => x.available >= 180);
-    if (!d) lines.push("No batch has 180 available units. Reset the demo to restore the split-delivery case.");
+    if (!d) lines.push("This scenario needs a batch with 180 available units. Reset scenario data to restore the starting conditions, then run it again.");
     else {
       const result = allocateAcrossRiders(state, { donationId: d.id, quantity: 180, travelMinutes: 15, safetyBufferMinutes: 10 }, now);
       lines.push("Target: 180 meals; each scooter rider is limited to 40.");
@@ -433,7 +433,7 @@ export function runScenario(state, scenarioKey, now = Date.now()) {
           addAlert(state, "No safe reroute available", assignment.id + " has no compatible open destination with enough demand and time remaining.", "critical", now);
         }
       } else lines.push("Could not create a feasible in-transit assignment for the closure simulation.");
-    } else lines.push("Seed data is missing the batch, rider, or Shelter A.");
+    } else lines.push("This scenario needs the default meal batch, an available rider, and Shelter A. Reset scenario data, then run it again.");
   } else if (scenarioKey === "direct-drop") {
     const d = state.donations.find(x => x.id === "B-180");
     const r = state.riders.find(x => x.status === "available" && x.capacity >= 40);
@@ -450,7 +450,7 @@ export function runScenario(state, scenarioKey, now = Date.now()) {
         lines.push("Shelter A's remaining demand is now " + shelterRemaining(state, s.id) + ". Incoming cargo is held for recovery, not marked delivered.");
         lines.push("Safe alternate destinations: " + (direct.alternatives.map(x => x.name).join(", ") || "none; assignment must be escalated") + ".");
       } else lines.push("Could not create a feasible in-transit assignment: " + (created.errors || confirmed?.errors || pickup?.errors || []).join(" "));
-    } else lines.push("Seed data is missing the split-case batch, rider, or Shelter A.");
+    } else lines.push("This scenario needs the default meal batch, an available rider, and Shelter A. Reset scenario data, then run it again.");
   } else if (scenarioKey === "resources") {
     const d = state.donations.find(x => x.type === "raw" && x.available > 0);
     const s = state.shelters.find(x => !x.water || !x.fuel);
