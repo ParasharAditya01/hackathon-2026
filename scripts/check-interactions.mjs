@@ -117,6 +117,7 @@ try {
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
   await page.goto(baseURL, { waitUntil: "networkidle" });
+  await auditControlSemantics(page, "landing page");
 
   // Both landing-page entry actions must route to their promised destination.
   const explorePage = await context.newPage();
