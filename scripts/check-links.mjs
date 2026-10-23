@@ -130,6 +130,7 @@ try {
   }
   console.log("PASS landing page links · brand and footer return to #top");
 
+  await page.evaluate(() => sessionStorage.removeItem("aidflow-entered"));
   await page.reload({ waitUntil: "networkidle" });
   await page.locator(".landing-nav-cta").click();
   await page.locator(".page-content").waitFor();
