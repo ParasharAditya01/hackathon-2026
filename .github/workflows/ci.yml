@@ -22,6 +22,8 @@ jobs:
         run: npm test
       - name: Install Chromium for responsive browser checks
         run: npx playwright install --with-deps chromium
+      - name: Verify internal and external links
+        run: npm run test:links
       - name: Verify horizontal overflow across viewport sizes and views
         run: npm run test:responsive
       - name: Build production bundle
