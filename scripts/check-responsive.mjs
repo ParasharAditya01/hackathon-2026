@@ -193,6 +193,10 @@ try {
       if (!(await page.locator(".sidebar .nav-item").nth(1).evaluate(element => element === document.activeElement))) throw new Error("Tab did not move focus through mobile navigation");
       await page.keyboard.press("Shift+Tab");
       if (!(await page.locator(".sidebar .nav-item").first().evaluate(element => element === document.activeElement))) throw new Error("Shift+Tab did not reverse through mobile navigation");
+      await page.keyboard.press("Shift+Tab");
+      if (!(await page.locator(".sidebar .profile-button").evaluate(element => element === document.activeElement))) throw new Error("Shift+Tab did not wrap from the first navigation item to the last control");
+      await page.keyboard.press("Tab");
+      if (!(await page.locator(".sidebar .brand").evaluate(element => element === document.activeElement))) throw new Error("Tab did not wrap from the last control to the first drawer link");
       await page.keyboard.press("Escape");
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close mobile navigation");
