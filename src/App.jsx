@@ -505,7 +505,7 @@ export default function App() {
 
   return <div className={"app-shell" + (mobileMenuOpen ? " mobile-nav-open" : "")}>
     {isMobileNavViewport && mobileMenuOpen && <button className="mobile-nav-backdrop" type="button" aria-label="Close navigation menu" onClick={() => { setMobileMenuOpen(false); mobileMenuButtonRef.current?.focus(); }} />}
-    <aside className={"sidebar" + (mobileMenuOpen ? " is-mobile-open" : "")} id="primary-navigation-panel" ref={mobileNavRef} aria-label="Workspace navigation" aria-hidden={isMobileNavViewport && !mobileMenuOpen ? true : undefined} inert={isMobileNavViewport && !mobileMenuOpen ? true : undefined}>
+    <aside className={"sidebar" + (mobileMenuOpen ? " is-mobile-open" : "")} id="primary-navigation-panel" ref={mobileNavRef} aria-label="Workspace navigation" aria-hidden={isMobileNavViewport && !mobileMenuOpen ? true : undefined} inert={isMobileNavViewport && !mobileMenuOpen ? "" : undefined}>
       <a className="brand" href="#overview" onClick={(event) => { event.preventDefault(); navigateTo("Overview"); }} aria-label="AidFlow home — Overview"><span className="brand-mark"><AidFlowMark /></span><span className="brand-copy"><strong>aidflow</strong><small>CIVIC OPERATIONS</small></span></a>
       {isMobileNavViewport && <button className="mobile-drawer-close" type="button" aria-label="Close navigation menu" onClick={() => { setMobileMenuOpen(false); mobileMenuButtonRef.current?.focus(); }}><XCircle size={20} aria-hidden="true" /></button>}
       <div className="workspace-label">WORKSPACE</div>
