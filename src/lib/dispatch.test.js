@@ -111,3 +111,16 @@ test("confirmed but unpicked claim expires and releases reserved stock", () => {
   assert.equal(batch.picked, 0);
   assert.equal(expireReservations(state, Date.now()), 0);
 });
+
+
+test("shelter closure after pickup preserves cargo and requires reroute or escalation", () => {
+  const state = createSeedState();
+  runScenario(state, "closure");
+  const site = state.shelters.find(s => s.id === "S-A");
+  const assignment = state.assignments[0];
+  const batch = state.donations.find(d => d.id === "B-180");
+  assert.equal(site.status, "closed");
+  assert.ok(["reroute_required", "escalated"].includes(assignment.status));
+  assert.equal(batch.picked, 40);
+  assert.equal(batch.available + batch.reserved + batch.picked + batch.delivered + batch.rejected, batch.original);
+});
