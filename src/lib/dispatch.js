@@ -124,6 +124,44 @@ export function expireReservations(state, now = Date.now()) {
   return count;
 }
 
+export function expireAidBatches(state, now = Date.now()) {
+  let expiredUnits = 0;
+  state.donations.forEach(d => {
+    if (new Date(d.deadline).getTime() > now) return;
+    if (d.available > 0) {
+      const quantity = d.available;
+      d.available = 0;
+      d.rejected += quantity;
+      state.spoiledTotal += quantity;
+      expiredUnits += quantity;
+      addEvent(state, "Aid batch expired", d.id + " · " + quantity + " unclaimed units quarantined after the safe-use deadline.", "critical", now);
+    }
+    state.reservations.filter(res => res.donationId === d.id && ["pending", "confirmed"].includes(res.status)).forEach(res => {
+      const assignment = res.assignmentId ? state.assignments.find(a => a.id === res.assignmentId) : null;
+      if (res.status === "confirmed" && (!assignment || assignment.status !== "accepted")) return;
+      d.reserved = Math.max(0, d.reserved - res.quantity);
+      d.rejected += res.quantity;
+      state.spoiledTotal += res.quantity;
+      expiredUnits += res.quantity;
+      res.status = "expired";
+      if (assignment && assignment.status === "accepted") {
+        assignment.status = "cancelled";
+        assignment.history.push("safe_use_deadline_missed_before_pickup");
+      }
+      addEvent(state, "Reserved aid expired", res.id + " could not be safely dispatched; " + res.quantity + " units quarantined.", "critical", now);
+    });
+    state.assignments.filter(a => a.donationId === d.id && ["picked_up", "in_transit", "reroute_required", "escalated"].includes(a.status)).forEach(a => {
+      a.status = "failed";
+      a.history.push("safe_use_deadline_missed");
+      const rider = state.riders.find(r => r.id === a.riderId);
+      if (rider) rider.status = "unavailable";
+      addAlert(state, "Safe-use deadline missed", a.id + " still carries " + a.quantity + " units after the safe-use deadline. Cargo remains picked and requires spoiled/rejected disposition.", "critical", now);
+    });
+  });
+  if (expiredUnits > 0) addAlert(state, "Expired aid quarantined", expiredUnits + " units were removed from dispatch eligibility after their safe-use deadline.", "critical", now);
+  return expiredUnits;
+}
+
 export function createReservation(state, request, now = Date.now()) {
   const errors = validateFeasibility(state, { ...request, now });
   if (errors.length) return { ok: false, errors };
