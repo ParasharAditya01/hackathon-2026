@@ -43,6 +43,22 @@ async function waitForServer() {
   throw new Error("Vite server did not become ready.");
 }
 
+async function navigateToSection(page, section, mobile) {
+  if (mobile) {
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await page.locator(".sidebar.is-mobile-open").waitFor();
+  }
+  await page.locator(".nav-item").filter({ hasText: section }).click();
+  await page.locator(".page-content").waitFor();
+  if (mobile) {
+    await page.getByRole("button", { name: "Open navigation menu" }).waitFor();
+    const expanded = await page.getByRole("button", { name: "Open navigation menu" }).getAttribute("aria-expanded");
+    if (expanded !== "false") throw new Error("Mobile navigation did not close after selecting " + section);
+    const current = await page.locator(".breadcrumb strong").innerText();
+    if (current.trim() !== section) throw new Error("Mobile navigation selected " + current + " instead of " + section);
+  }
+}
+
 async function inspectViewport(page, width, height, viewName) {
   const result = await page.evaluate(() => {
     const viewportWidth = document.documentElement.clientWidth;
@@ -161,15 +177,29 @@ try {
     await page.locator(".page-content").waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Overview");
 
+    const mobile = viewport.width <= 760;
+    if (mobile) {
+      const menuButton = page.getByRole("button", { name: "Open navigation menu" });
+      await menuButton.click();
+      await page.locator(".sidebar.is-mobile-open").waitFor();
+      if (await menuButton.getAttribute("aria-expanded") !== "true") throw new Error("Mobile menu button did not expose expanded state");
+      await page.keyboard.press("Escape");
+      await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
+      if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close mobile navigation");
+      if (!(await menuButton.evaluate(element => element === document.activeElement))) throw new Error("Escape did not restore focus to the menu button");
+      await navigateToSection(page, "Aid batches", true);
+      await inspectViewport(page, viewport.width, viewport.height, "Mobile menu keyboard and navigation");
+      await navigateToSection(page, "Overview", true);
+    }
+
     for (const section of sections.slice(1)) {
-      await page.locator(".nav-item").filter({ hasText: section }).click();
-      await page.locator(".page-content").waitFor();
+      await navigateToSection(page, section, mobile);
       await inspectViewport(page, viewport.width, viewport.height, section);
     }
 
     // Exercise the primary operator journey at every viewport.
     const stamp = String(viewport.width);
-    await page.locator(".nav-item").filter({ hasText: "Aid batches" }).click();
+    await navigateToSection(page, "Aid batches", mobile);
     const batchForm = page.locator("form.form-card").first();
     await batchForm.getByLabel("Donor / organization").fill("Responsive Test Kitchen " + stamp);
     await batchForm.getByLabel("Batch name").fill("Viewport test meals " + stamp);
@@ -179,7 +209,7 @@ try {
     await page.getByText("Viewport test meals " + stamp, { exact: true }).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Aid batch creation journey");
 
-    await page.locator(".nav-item").filter({ hasText: "Riders" }).click();
+    await navigateToSection(page, "Riders", mobile);
     const riderForm = page.locator("form.form-card").first();
     await riderForm.getByLabel("Rider name").fill("Responsive Rider " + stamp);
     await riderForm.getByLabel("Capacity (units)").fill("20");
@@ -188,7 +218,7 @@ try {
     await page.getByText("Responsive Rider " + stamp, { exact: true }).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Rider registration journey");
 
-    await page.locator(".nav-item").filter({ hasText: "Receiving sites" }).click();
+    await navigateToSection(page, "Receiving sites", mobile);
     const siteForm = page.locator("form.form-card").first();
     await siteForm.getByLabel("Site name").fill("Responsive Site " + stamp);
     await siteForm.getByLabel("Zone").fill("Test zone");
@@ -197,7 +227,7 @@ try {
     await page.getByText("Responsive Site " + stamp, { exact: true }).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Receiving site registration journey");
 
-    await page.locator(".nav-item").filter({ hasText: "Dispatch board" }).click();
+    await navigateToSection(page, "Dispatch board", mobile);
     const allocationForm = page.locator("form.form-card").first();
     await allocationForm.getByLabel("Aid batch").selectOption("B-180");
     await allocationForm.getByLabel("Units to allocate").fill("40");
@@ -213,7 +243,7 @@ try {
     await page.getByText(/Reservation confirmation checked/i).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Reservation confirmation journey");
 
-    await page.locator(".nav-item").filter({ hasText: "Dispatch board" }).click();
+    await navigateToSection(page, "Dispatch board", mobile);
     await page.getByRole("button", { name: /Confirm pickup/i }).first().click();
     await page.getByRole("button", { name: /Start transit/i }).first().waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Pickup journey");
