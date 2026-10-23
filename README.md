@@ -69,3 +69,32 @@ This repository currently contains a **client-side prototype**, not a deployed m
 - Recorded resource flags are not independent verification of food safety, medical suitability, or regulatory compliance.
 
 The prototype is intended for judging and demonstration only. Do not use it to make real food-safety or medical-distribution decisions.
+
+
+## PostgreSQL backend foundation
+
+The repository now includes an initial PostgreSQL schema and a minimal Node.js API service. This is an infrastructure foundation, **not yet a multi-user production application**.
+
+- `server/schema.sql` defines persistent tables for users, aid batches, riders, receiving sites, reservations, assignments, alerts, and audit events.
+- `server/index.js` applies the idempotent schema on startup and exposes `GET /api/health` and `GET /api/ready`.
+- The API intentionally rejects state-changing HTTP methods. It does not yet expose operational data or write endpoints before authentication and server-side domain transactions are implemented.
+- Inventory constraints are enforced by database checks; follow-up operational endpoints must also use transactions and row locking to prevent concurrent reservations from overselling stock, rider capacity, or receiving-site demand.
+- No production credentials, database URLs, or secret tokens belong in GitHub.
+
+### Configure locally
+
+1. Install Node.js 20+ and run `npm install`.
+2. Create a local PostgreSQL database named `aidflow`.
+3. Copy `.env.example` to `.env` and set `DATABASE_URL` to your local PostgreSQL connection string.
+4. Run `npm run start:api`. The API listens on `PORT` (default `10000`).
+5. Check `GET /api/health` for process health and `GET /api/ready` for database connectivity.
+
+### Deploy on Render
+
+1. Create a PostgreSQL database in Render. Keep it private and use its **Internal Database URL** for a backend service in the same Render region.
+2. Create a separate Render **Web Service** for this repository, using the repository root as its Root Directory, `npm install` as the Build Command, and `npm run start:api` as the Start Command.
+3. In the backend service's Environment settings, set `DATABASE_URL` to the database's Internal Database URL and `FRONTEND_ORIGINS` to the exact deployed frontend origin (no path and no trailing slash). Set `NODE_ENV=production`.
+4. Add a health check path of `/api/health`; use `/api/ready` when the deployment platform should only consider the service healthy if PostgreSQL is reachable.
+5. Never put `DATABASE_URL` in frontend environment variables, Vite-prefixed variables, source files, screenshots, or commits. Do not share the database URL in chat.
+
+**Current limitation:** the existing React workspace still uses browser-local storage. It is not connected to this database yet. Do not treat this backend foundation as authentication, authorization, or production-ready aid dispatch. The next implementation stage is secure account/session handling, role checks, transactional domain endpoints, and migration of the UI away from local-only state.
