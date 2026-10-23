@@ -219,14 +219,15 @@ try {
   }
 
   let externalAnchors = await auditAnchors(page, "landing page");
-  const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
+  const landingAnchorTargetsValid = await page.locator('.landing-nav a[href="#top"], .landing-footer a[href="#top"]').evaluateAll(anchors =>
     anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
   );
-  if (!landingAnchorTargetsValid) throw new Error("Landing brand/footer links do not both resolve to the #top section.");
+  if (!landingAnchorTargetsValid) throw new Error("Landing header/footer brand links do not both resolve to the #top section.");
   const landingBrand = page.getByRole("link", { name: "AidFlow home" }).first();
   const landingLogoStyle = await landingBrand.evaluate(element => {
     const rect = element.getBoundingClientRect();
-    const mark = element.querySelector(".landing-mark");
+    const mark = element.querySelector(".landing-mark, .landing-footer-mark");
+    if (!mark) return { width: rect.width, height: rect.height, markWidth: 0, markHeight: 0, foreground: getComputedStyle(element).color, background: getComputedStyle(element.closest("nav, footer")).backgroundColor };
     const markRect = mark.getBoundingClientRect();
     return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height, foreground: getComputedStyle(element).color, background: getComputedStyle(element.closest(".landing-nav")).backgroundColor };
   });
