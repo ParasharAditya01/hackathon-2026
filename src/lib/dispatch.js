@@ -103,15 +103,22 @@ export function addAlert(state, title, detail, level = "warning", now = Date.now
 export function expireReservations(state, now = Date.now()) {
   let count = 0;
   state.reservations.forEach(res => {
-    if (res.status !== "pending" || new Date(res.expiresAt).getTime() > now) return;
+    const timedOut = ["pending", "confirmed"].includes(res.status) && new Date(res.expiresAt).getTime() <= now;
+    if (!timedOut) return;
+    const assignment = res.assignmentId ? state.assignments.find(a => a.id === res.assignmentId) : null;
+    if (res.status === "confirmed" && (!assignment || assignment.status !== "accepted")) return;
     res.status = "expired";
     const d = state.donations.find(x => x.id === res.donationId);
     if (d) {
       d.reserved = Math.max(0, d.reserved - res.quantity);
       d.available += res.quantity;
     }
-    addEvent(state, "Reservation expired", res.id + " timed out; " + res.quantity + " units released exactly once.", "warning", now);
-    addAlert(state, "Ghost reservation released", res.id + " expired without confirmation; eligible stock and capacity are available again.", "warning", now);
+    if (assignment && assignment.status === "accepted") {
+      assignment.status = "cancelled";
+      assignment.history.push("pickup_claim_timed_out");
+    }
+    addEvent(state, "Reservation expired", res.id + " timed out before pickup; " + res.quantity + " units released exactly once.", "warning", now);
+    addAlert(state, "Ghost reservation released", res.id + " expired before pickup; eligible stock and rider/site capacity are available again.", "warning", now);
     count += 1;
   });
   return count;
