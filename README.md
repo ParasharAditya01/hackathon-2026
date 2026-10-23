@@ -60,11 +60,12 @@ Use the Resilience lab navigation to run repeatable scenarios. Use Reset scenari
 
 ## Limitations — not production-ready
 
-This repository currently contains a **client-side prototype**, not a deployed multi-user logistics platform.
+The React workspace remains a **client-side prototype**, and the new API is only an initial infrastructure foundation. Until authentication, authorization, transactional domain endpoints, background expiry, and frontend integration are completed and deployed, AidFlow is not a multi-user logistics platform.
 
-- There is no server, shared database, secure login, or backend role-based authorization.
-- Business rules run in browser JavaScript and can be bypassed by a modified client. Production must enforce them on a trusted server using atomic transactions and concurrency control.
-- Reservation expiry runs in the open browser tab. Server-side expiry and recovery are required for real operation.
+- PostgreSQL schema and a minimal Node.js API are now included in the repository, but the existing React workspace still uses browser-local storage; the database is not yet the source of truth for the UI.
+- There is not yet a secure login/session flow or backend role-based authorization.
+- Operational business rules still run in browser JavaScript and can be bypassed by a modified client. Production mutations must be enforced on a trusted server using atomic transactions, row locking, and concurrency control.
+- Reservation expiry still runs in the open browser tab. Server-side expiry and recovery are required for real operation.
 - Travel estimates are manually entered. No live maps, geocoding, GPS, route optimization, SMS, email, or push notifications are integrated.
 - Recorded resource flags are not independent verification of food safety, medical suitability, or regulatory compliance.
 
