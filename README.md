@@ -15,6 +15,15 @@ Open the local URL printed by Vite. To run domain tests and verify a production 
     npm run build
     npm run preview
 
+## Visual identity and UX
+
+- Editorial first-entry landing page with the headline “Move good food. Before time runs out.” and clearly labelled synthetic scenario figures.
+- Bespoke AidFlow route mark, animated route line, destination point and compact wordmark, with reduced-motion support.
+- Oxblood and porcelain design tokens, deep-wine navigation, warm near-white work surfaces, aged-brass dividers and semantic status colors.
+- Purpose-built route illustration, operational hierarchy, responsive layouts and visible keyboard focus states.
+- System-first font fallbacks avoid blocking the initial render on third-party font downloads.
+- Custom embedded SVG favicon and updated page/theme metadata.
+
 ## Implemented workflows
 
 - **Aid batches:** register prepared food, perishable food, raw ration kits, medical supplies, infant formula, and essential kits with donor, pickup window, handling notes, quantity, and safe-use deadline.
