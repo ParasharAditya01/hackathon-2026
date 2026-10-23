@@ -1,0 +1,133 @@
+import { spawn } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
+import { chromium } from "playwright";
+
+const baseURL = "http://127.0.0.1:4179";
+const viewports = [
+  { width: 280, height: 800 },
+  { width: 320, height: 800 },
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+  { width: 430, height: 932 },
+  { width: 768, height: 900 },
+  { width: 1024, height: 900 },
+  { width: 1280, height: 900 },
+  { width: 1440, height: 1000 },
+];
+const sections = [
+  "Overview",
+  "Aid batches",
+  "Dispatch board",
+  "Riders",
+  "Receiving sites",
+  "Reservations",
+  "Alerts & audit",
+  "Resilience lab",
+];
+
+const server = spawn("npm", ["run", "dev", "--", "--host", "127.0.0.1", "--port", "4179", "--strictPort"], {
+  stdio: "ignore",
+  env: process.env,
+});
+let browser;
+
+async function waitForServer() {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    try {
+      const response = await fetch(baseURL);
+      if (response.ok) return;
+    } catch {}
+    await delay(500);
+  }
+  throw new Error("Vite server did not become ready.");
+}
+
+async function inspectViewport(page, width, height, viewName) {
+  const result = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    const rootWidth = document.documentElement.scrollWidth;
+    const bodyWidth = document.body.scrollWidth;
+    const offenders = [...document.querySelectorAll("body *")].flatMap((element) => {
+      if (!element.getClientRects().length) return [];
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      if (style.visibility === "hidden" || style.display === "none") return [];
+      if (rect.width === 0 && rect.height === 0) return [];
+      if (rect.left < -1 || rect.right > viewportWidth + 1) {
+        return [{
+          tag: element.tagName.toLowerCase(),
+          className: typeof element.className === "string" ? element.className : "",
+          text: (element.innerText || element.getAttribute("aria-label") || "").trim().slice(0, 70),
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+        }];
+      }
+      return [];
+    });
+    const clipped = [...document.querySelectorAll("body *")].flatMap((element) => {
+      if (!element.getClientRects().length) return [];
+      const style = getComputedStyle(element);
+      if (!["hidden", "clip"].includes(style.overflowX)) return [];
+      if (element.scrollWidth <= element.clientWidth + 2) return [];
+      return [{
+        tag: element.tagName.toLowerCase(),
+        className: typeof element.className === "string" ? element.className : "",
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        text: (element.innerText || "").trim().slice(0, 70),
+      }];
+    });
+    return { viewportWidth, rootWidth, bodyWidth, offenders, clipped };
+  });
+
+  const failures = [];
+  if (result.rootWidth > result.viewportWidth + 1) {
+    failures.push(`document scroll width ${result.rootWidth}px exceeds ${result.viewportWidth}px`);
+  }
+  if (result.bodyWidth > result.viewportWidth + 1) {
+    failures.push(`body scroll width ${result.bodyWidth}px exceeds ${result.viewportWidth}px`);
+  }
+  if (result.offenders.length) {
+    failures.push(`${result.offenders.length} visible element(s) extend beyond the viewport: ${JSON.stringify(result.offenders.slice(0, 6))}`);
+  }
+  if (result.clipped.length) {
+    failures.push(`${result.clipped.length} element(s) clip horizontally overflowing content: ${JSON.stringify(result.clipped.slice(0, 6))}`);
+  }
+
+  if (failures.length) {
+    throw new Error(`[${width}x${height}] ${viewName}: ${failures.join("; ")}`);
+  }
+  console.log(`PASS ${width}x${height} · ${viewName}`);
+}
+
+try {
+  await waitForServer();
+  browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  page.on("pageerror", (error) => {
+    console.error("Browser page error:", error.message);
+  });
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto(baseURL, { waitUntil: "networkidle" });
+    await inspectViewport(page, viewport.width, viewport.height, "Landing page");
+
+    await page.getByRole("button", { name: /Open operations workspace/i }).click();
+    await page.locator(".page-content").waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Overview");
+
+    for (const section of sections.slice(1)) {
+      await page.locator(".nav-item").filter({ hasText: section }).click();
+      await page.locator(".page-content").waitFor();
+      await inspectViewport(page, viewport.width, viewport.height, section);
+    }
+  }
+
+  console.log(`Responsive overflow check passed for ${viewports.length} viewport sizes and all 9 views.`);
+} finally {
+  if (browser) await browser.close();
+  server.kill("SIGTERM");
+}
