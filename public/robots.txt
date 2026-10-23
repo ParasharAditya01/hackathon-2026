@@ -1,0 +1,4 @@
+# AidFlow robots policy
+# Public pages and static assets may be crawled.
+User-agent: *
+Allow: /
