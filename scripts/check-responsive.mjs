@@ -104,14 +104,12 @@ async function inspectViewport(page, width, height, viewName) {
 try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-
-  page.on("pageerror", (error) => {
-    console.error("Browser page error:", error.message);
-  });
-
   for (const viewport of viewports) {
-    await page.setViewportSize(viewport);
+    // A fresh page gets isolated sessionStorage so every viewport starts on the landing screen.
+    const page = await browser.newPage({ viewport });
+    page.on("pageerror", (error) => {
+      console.error("Browser page error:", error.message);
+    });
     await page.goto(baseURL, { waitUntil: "networkidle" });
     await inspectViewport(page, viewport.width, viewport.height, "Landing page");
 
@@ -124,6 +122,7 @@ try {
       await page.locator(".page-content").waitFor();
       await inspectViewport(page, viewport.width, viewport.height, section);
     }
+    await page.close();
   }
 
   console.log(`Responsive overflow check passed for ${viewports.length} viewport sizes and all 9 views.`);
