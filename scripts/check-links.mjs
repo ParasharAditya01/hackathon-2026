@@ -299,7 +299,7 @@ try {
   await page.getByRole("heading", { name: /This route has gone missing/i }).waitFor();
   if (!(await page.getByText(/couldn’t find the page you’re looking for/i).count())) throw new Error("Unknown URL did not explain that the page could not be found.");
   for (const name of ["Return to homepage", "Open operations", "Aid batches", "Dispatch board", "Resilience lab"]) {
-    if (!(await page.getByRole(name === "Return to homepage" ? "link" : "button", { name: new RegExp(name, "i") }).count())) throw new Error("404 recovery destination is missing: " + name);
+    if (!(await page.getByRole("link", { name: new RegExp(name, "i") }).count())) throw new Error("404 recovery destination is missing: " + name);
   }
   await page.getByRole("link", { name: /Return to homepage/i }).click();
   await page.locator(".landing-page").waitFor();
