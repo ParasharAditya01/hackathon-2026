@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity, AlertTriangle, ArrowRight, Bike, Boxes, CheckCircle2, Clock3,
   HandHeart, LayoutDashboard, MapPinned, PackageCheck, Plus, RotateCcw,
@@ -125,6 +125,10 @@ export default function App() {
   const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem("aidflow-entered") === "1"; } catch { return false; } });
   const [data, setData] = useState(loadInitialState);
   const [page, setPage] = useState("Overview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobileNavViewport, setIsMobileNavViewport] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches);
+  const mobileMenuButtonRef = useRef(null);
+  const mobileNavRef = useRef(null);
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState("");
   const [search, setSearch] = useState("");
@@ -147,6 +151,39 @@ export default function App() {
     setToast(message);
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => setToast(""), 3200);
+  };
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 760px)");
+    const updateViewport = () => {
+      setIsMobileNavViewport(media.matches);
+      if (!media.matches) setMobileMenuOpen(false);
+    };
+    updateViewport();
+    media.addEventListener("change", updateViewport);
+    return () => media.removeEventListener("change", updateViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileNavViewport || !mobileMenuOpen) return undefined;
+    mobileNavRef.current?.querySelector("button.nav-item")?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileMenuOpen(false);
+        mobileMenuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileNavViewport, mobileMenuOpen]);
+
+  const navigateTo = (nextPage) => {
+    setPage(nextPage);
+    if (isMobileNavViewport) {
+      setMobileMenuOpen(false);
+      requestAnimationFrame(() => mobileMenuButtonRef.current?.focus());
+    }
   };
 
   useEffect(() => {
@@ -360,9 +397,18 @@ export default function App() {
 
   if (!entered) return <LandingPage onEnter={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setEntered(true); }} onExplore={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setPage("Resilience lab"); setEntered(true); }} />;
 
-  return <div className="app-shell">
-    <aside className="sidebar"><a className="brand" href="#overview" onClick={e => { e.preventDefault(); setPage("Overview"); }} aria-label="AidFlow overview"><span className="brand-mark"><AidFlowMark /></span><span className="brand-copy"><strong>aidflow</strong><small>CIVIC OPERATIONS</small></span></a><div className="workspace-label">WORKSPACE</div><nav className="primary-nav" aria-label="Primary navigation">{navItems.map(([label, Icon]) => <button className={"nav-item " + (page === label ? "is-active" : "")} key={label} type="button" onClick={() => setPage(label)} aria-current={page === label ? "page" : undefined}><Icon size={18} strokeWidth={1.8} /><span>{label}</span>{label === "Dispatch board" && <span className="nav-count">{activeAssignments.length}</span>}{label === "Reservations" && <span className="nav-count">{pendingReservations.length}</span>}</button>)}</nav><div className="sidebar-bottom"><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div></aside>
-    <main className="main-content"><header className="topbar"><div className="breadcrumb"><span>AidFlow</span><span className="breadcrumb-slash">/</span><strong>{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div></header><div className="page-wrap">{pageContent}<footer className="app-footer"><span><span className="footer-mark"><AidFlowMark /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></footer></div></main>
+  return <div className={"app-shell" + (mobileMenuOpen ? " mobile-nav-open" : "")}>
+    {isMobileNavViewport && mobileMenuOpen && <button className="mobile-nav-backdrop" type="button" aria-label="Close navigation menu" onClick={() => { setMobileMenuOpen(false); mobileMenuButtonRef.current?.focus(); }} />}
+    <aside className={"sidebar" + (mobileMenuOpen ? " is-mobile-open" : "")} id="primary-navigation-panel" ref={mobileNavRef} aria-label="Workspace navigation" aria-hidden={isMobileNavViewport && !mobileMenuOpen ? true : undefined} inert={isMobileNavViewport && !mobileMenuOpen}>
+      <a className="brand" href="#overview" onClick={e => { e.preventDefault(); navigateTo("Overview"); }} aria-label="AidFlow overview"><span className="brand-mark"><AidFlowMark /></span><span className="brand-copy"><strong>aidflow</strong><small>CIVIC OPERATIONS</small></span></a>
+      <div className="workspace-label">WORKSPACE</div>
+      <nav className="primary-nav" aria-label="Primary navigation">{navItems.map(([label, Icon]) => <button className={"nav-item " + (page === label ? "is-active" : "")} key={label} type="button" onClick={() => navigateTo(label)} aria-current={page === label ? "page" : undefined}><Icon size={18} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>{label === "Dispatch board" && <span className="nav-count" aria-label={activeAssignments.length + " active assignments"}>{activeAssignments.length}</span>}{label === "Reservations" && <span className="nav-count" aria-label={pendingReservations.length + " pending reservations"}>{pendingReservations.length}</span>}</button>)}</nav>
+      <div className="sidebar-bottom"><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div>
+    </aside>
+    <main className="main-content"><header className="topbar">
+      {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
+      <div className="breadcrumb"><span>AidFlow</span><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
+    </header><div className="page-wrap">{pageContent}<footer className="app-footer"><span><span className="footer-mark"><AidFlowMark /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></footer></div></main>
     {toast && <div className="toast-message" role="status" aria-live="polite">{toast}</div>}
   </div>;
 }
