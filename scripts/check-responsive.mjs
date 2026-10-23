@@ -179,6 +179,24 @@ try {
     await page.getByText("Viewport test meals " + stamp, { exact: true }).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Aid batch creation journey");
 
+    await page.locator(".nav-item").filter({ hasText: "Riders" }).click();
+    const riderForm = page.locator("form.form-card").first();
+    await riderForm.getByLabel("Rider name").fill("Responsive Rider " + stamp);
+    await riderForm.getByLabel("Capacity (units)").fill("20");
+    await riderForm.getByLabel("Current zone").fill("Test zone");
+    await riderForm.getByRole("button", { name: /Add rider/i }).click();
+    await page.getByText("Responsive Rider " + stamp, { exact: true }).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Rider registration journey");
+
+    await page.locator(".nav-item").filter({ hasText: "Receiving sites" }).click();
+    const siteForm = page.locator("form.form-card").first();
+    await siteForm.getByLabel("Site name").fill("Responsive Site " + stamp);
+    await siteForm.getByLabel("Zone").fill("Test zone");
+    await siteForm.getByLabel("Demand (units)").fill("35");
+    await siteForm.getByRole("button", { name: /Add receiving site/i }).click();
+    await page.getByText("Responsive Site " + stamp, { exact: true }).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Receiving site registration journey");
+
     await page.locator(".nav-item").filter({ hasText: "Dispatch board" }).click();
     const allocationForm = page.locator("form.form-card").first();
     await allocationForm.getByLabel("Aid batch").selectOption("B-180");
