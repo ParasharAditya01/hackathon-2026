@@ -70,7 +70,8 @@ export function validateFeasibility(state, { donationId, riderId, shelterId, qua
   if (!Number.isInteger(quantity) || quantity <= 0) reasons.push("Quantity must be a positive whole number.");
   if (!d) reasons.push("Aid batch does not exist.");
   else {
-    if (d.available < quantity) reasons.push("Insufficient unreserved batch quantity.");
+    const held = excludeReservationId ? (state.reservations.find(x => x.id === excludeReservationId)?.quantity || 0) : 0;
+    if (d.available + held < quantity) reasons.push("Insufficient unreserved batch quantity.");
     if (remainingMinutes(d.deadline, now) <= travelMinutes + safetyBufferMinutes) reasons.push("Arrival plus safety buffer misses the safe-use deadline.");
     if (new Date(d.pickupAt).getTime() > now) reasons.push("Pickup window has not opened.");
   }
@@ -218,7 +219,18 @@ export function transitionAssignment(state, assignmentId, next, now = Date.now()
   const res = state.reservations.find(x => x.assignmentId === a.id);
   if (next === "picked_up") {
     if (!d || !res || res.status !== "confirmed" || d.reserved < a.quantity) return { ok: false, errors: ["Pickup blocked: confirmed reserved inventory could not be reconciled."] };
-    const errors = validateFeasibility(state, { donationId: d.id, riderId: a.riderId, shelterId: s?.id, quantity: a.quantity, travelMinutes: a.travelMinutes, safetyBufferMinutes: a.safetyBufferMinutes, now });
+    const rider = state.riders.find(x => x.id === a.riderId);
+    const otherRiderLoad = state.assignments.filter(x => x.riderId === a.riderId && x.id !== a.id && isActiveAssignment(x)).reduce((sum, x) => sum + x.quantity, 0) + state.reservations.filter(x => x.riderId === a.riderId && x.status === "pending").reduce((sum, x) => sum + x.quantity, 0);
+    const otherSiteCommitments = state.assignments.filter(x => x.shelterId === s?.id && x.id !== a.id && isActiveAssignment(x)).reduce((sum, x) => sum + x.quantity, 0) + state.reservations.filter(x => x.shelterId === s?.id && x.status === "pending").reduce((sum, x) => sum + x.quantity, 0);
+    const errors = [];
+    if (!rider || rider.status !== "available" || otherRiderLoad + a.quantity > (rider?.capacity || 0)) errors.push("Rider availability or capacity changed.");
+    if (!s || !["open", "limited"].includes(s.status)) errors.push("Receiving site is closed.");
+    if (s && s.demand - s.delivered - otherSiteCommitments < a.quantity) errors.push("Receiving site demand has changed.");
+    if (d && remainingMinutes(d.deadline, now) <= a.travelMinutes + a.safetyBufferMinutes) errors.push("Pickup is no longer feasible before the safe-use deadline.");
+    if (d && s && !s.accepts.includes(d.type)) errors.push("Receiving site no longer accepts this aid type.");
+    if (d && s && ["raw", "infant_formula"].includes(d.type) && (!s.water || !s.fuel)) errors.push("Clean water and cooking fuel are required.");
+    if (d && s && ["perishable", "medical"].includes(d.type) && !s.coldStorage) errors.push("Cold storage is required.");
+    if (d && s && d.type === "medical" && !s.medicalStorage) errors.push("Medical storage is required.");
     if (errors.length) return { ok: false, errors };
     d.reserved -= a.quantity;
     d.picked += a.quantity;
