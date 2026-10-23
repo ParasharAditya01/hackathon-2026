@@ -123,6 +123,12 @@ try {
   await page.goto(baseURL, { waitUntil: "networkidle" });
 
   let externalAnchors = await auditAnchors(page, "landing page");
+  console.log("DEBUG landing state", JSON.stringify(await page.evaluate(() => ({
+    entered: sessionStorage.getItem("aidflow-entered"),
+    anchors: [...document.querySelectorAll("a[href]")].map(anchor => anchor.getAttribute("href")),
+    hasTopTarget: Boolean(document.getElementById("top")),
+    hasWorkspaceContent: Boolean(document.querySelector(".page-content")),
+  }))));
   const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
     anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
   );
