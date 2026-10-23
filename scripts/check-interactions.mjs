@@ -216,6 +216,7 @@ try {
   await navigate(page, "Riders");
   const riderForm = page.locator("form.form-card").first();
   await riderForm.getByLabel("Rider name").fill("Interaction Test Rider");
+  await riderForm.getByLabel("Phone number").fill("+919876543210");
   await riderForm.getByLabel("Capacity (units)").fill("20");
   await riderForm.getByLabel("Current zone").fill("Test zone");
   await riderForm.getByRole("button", { name: /Add rider/ }).click();
