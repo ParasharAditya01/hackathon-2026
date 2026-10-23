@@ -131,3 +131,10 @@ CREATE TABLE IF NOT EXISTS audit_events (
 );
 
 CREATE INDEX IF NOT EXISTS audit_events_created_idx ON audit_events(created_at DESC);
+
+
+-- Opaque, server-verifiable records for successful user operations.
+CREATE TABLE IF NOT EXISTS submission_confirmations (
+ token UUID PRIMARY KEY DEFAULT gen_random_uuid(), action TEXT NOT NULL, reference_id TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS submission_confirmations_created_idx ON submission_confirmations(created_at DESC);
