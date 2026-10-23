@@ -90,7 +90,7 @@ async function route(request, response) {
       sendJson(response,201,{status:"confirmed",token:saved.rows[0].token,batch:{id,donor,name,type,quantity,pickupAt:pickupAt.toISOString(),deadline:deadline.toISOString(),location,handling}},headers);
     }catch(error){await client.query("ROLLBACK").catch(()=>{});if(error.code==="23505")sendJson(response,409,{error:"A conflicting batch reference was generated. Please retry."},headers);else{console.error("Aid batch registration failed:",error.message);sendJson(response,500,{error:"The batch could not be saved. Your entries have not been confirmed."},headers);}}finally{client.release();}return;
   }
-  const confirmationMatch=url.pathname.match(/^\\/api\\/confirmations\\/([0-9a-f-]{36})$/i);
+  const confirmationMatch = url.pathname.match(/^\/api\/confirmations\/([0-9a-f-]{36})$/i);
   if(confirmationMatch&&request.method==="GET"){try{const result=await pool.query("SELECT action,reference_id FROM submission_confirmations WHERE token=$1 AND created_at>NOW()-INTERVAL '24 hours'",[confirmationMatch[1]]);const record=result.rows[0];if(!record||record.action!=="aid_batch_registered"){sendJson(response,404,{status:"unverified",error:"No valid recent confirmation was found."},headers);return;}sendJson(response,200,{status:"confirmed",actionLabel:"Aid batch registration",reference:record.reference_id},headers);}catch(error){console.error("Confirmation verification failed:",error.message);sendJson(response,503,{status:"unverified",error:"Confirmation service is temporarily unavailable."},headers);}return;}
   if (url.pathname === "/api/health" && request.method === "GET") {
     sendJson(response, 200, { status: "ok", service: "aidflow-api" }, headers);
