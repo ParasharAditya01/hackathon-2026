@@ -1198,3 +1198,19 @@ textarea {
   transform: none;
   box-shadow: none;
 }
+
+
+/* The workspace wordmark is a navigation button, styled like the former brand link. */
+.sidebar .brand,
+.sidebar .brand:hover {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar .brand:focus-visible {
+  outline: 3px solid var(--brass, #B58A4A);
+  outline-offset: 3px;
+}
