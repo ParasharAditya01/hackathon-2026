@@ -20,13 +20,13 @@ Open the local URL printed by Vite. To run domain tests and verify a production 
 - **Aid batches:** register prepared food, perishable food, raw ration kits, medical supplies, infant formula, and essential kits with donor, pickup window, handling notes, quantity, and safe-use deadline.
 - **Constraint-aware dispatch:** filter infeasible options before allocation. Enforce available stock, rider remaining capacity, receiving-site demand, aid-type compatibility, resource prerequisites, pickup opening time, estimated travel, and a configurable safety buffer.
 - **Split allocation:** split a bulk batch across multiple riders and receiving sites; reservations never exceed stock, rider capacity, or uncommitted site demand.
-- **Ghost reservation protection:** five-minute claim TTL, live browser countdown, automatic expiration, and one-time stock release for unconfirmed claims.
+- **Ghost reservation protection:** five-minute claim and pickup TTL, live browser countdown, automatic expiration, and one-time stock release for unconfirmed claims.
 - **Explicit handover lifecycle:** reservation confirmation, pickup, transit, delivery, cancellation before pickup, failure, reroute review, escalation, and final spoiled/rejected disposition.
 - **Changing site demand:** direct community drop-offs reduce open demand. Incoming cargo is moved to recovery review when a receiving site fills its requirement or closes during transit.
 - **Aid compatibility:** raw ration kits and infant formula require recorded clean water and cooking fuel; perishable food and medical supplies require cold-chain storage; medical supplies also require appropriate medical storage.
 - **Operational controls:** manage rider availability, site status and demand, review alerts, inspect an audit trail, and reset synthetic demo records.
-- **Judge resilience lab:** urgent expiry, 180-unit split delivery with 40-unit rider capacity, a 30-minute unresponsive-volunteer simulation, shelter demand filling during transit, and missing cooking resources.
-- **Domain tests and CI:** Node's built-in test runner covers split allocation, idempotent reservation expiry, resource compatibility, reservation-to-pickup inventory movement, direct-drop recovery, and deadline safety. GitHub Actions runs tests and a Vite production build on pushes and pull requests.
+- **Judge resilience lab:** urgent expiry, 180-unit split delivery with 40-unit rider capacity, a 30-minute unresponsive-volunteer simulation, direct drop-off filling demand during transit, shelter closure during transit, and missing cooking resources.
+- **Domain tests and CI:** Node's built-in test runner covers split allocation, idempotent claim expiry, safe-use quarantine, resource compatibility, reservation-to-pickup inventory movement, direct-drop recovery, and deadline safety. GitHub Actions runs tests and a Vite production build on pushes and pull requests.
 
 ## Core inventory rules
 
