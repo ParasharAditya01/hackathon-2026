@@ -178,6 +178,18 @@ try {
     await inspectViewport(page, viewport.width, viewport.height, "Overview");
 
     const mobile = viewport.width <= 760;
+    if (!mobile) {
+      const workspaceLogo = page.getByRole("link", { name: "AidFlow home — Overview" });
+      const geometry = await workspaceLogo.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        const markRect = element.querySelector(".brand-mark").getBoundingClientRect();
+        return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height };
+      });
+      if (geometry.width <= 0 || geometry.height <= 0 || Math.abs(geometry.markWidth - geometry.markHeight) > 0.5) throw new Error("Desktop workspace logo is not visible or square: " + JSON.stringify(geometry));
+      await workspaceLogo.click();
+      if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") throw new Error("Desktop workspace logo did not navigate to Overview");
+      console.log("PASS desktop workspace logo link · " + viewport.width + "px");
+    }
     if (mobile) {
       const menuButton = page.locator(".mobile-menu-toggle");
       await menuButton.click();
@@ -209,6 +221,19 @@ try {
       await page.locator(".mobile-nav-backdrop").click({ position: { x: viewport.width - 10, y: 10 } });
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Backdrop did not close navigation");
+      await menuButton.click();
+      await page.locator(".sidebar.is-mobile-open").waitFor();
+      const workspaceLogo = page.getByRole("link", { name: "AidFlow home — Overview" });
+      const geometry = await workspaceLogo.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        const markRect = element.querySelector(".brand-mark").getBoundingClientRect();
+        return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height };
+      });
+      if (geometry.width <= 0 || geometry.height <= 0 || Math.abs(geometry.markWidth - geometry.markHeight) > 0.5) throw new Error("Mobile workspace logo is not visible or square: " + JSON.stringify(geometry));
+      await workspaceLogo.click();
+      await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
+      if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") throw new Error("Mobile workspace logo did not navigate to Overview");
+      console.log("PASS mobile workspace logo link · " + viewport.width + "px");
       await navigateToSection(page, "Aid batches", true);
       await inspectViewport(page, viewport.width, viewport.height, "Mobile menu keyboard and navigation");
       await navigateToSection(page, "Overview", true);
