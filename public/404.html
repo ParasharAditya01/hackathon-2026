@@ -24,7 +24,10 @@
   <main>
     <a href="/" class="brand" aria-label="AidFlow homepage"><span class="mark"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="7" cy="24" r="3.2" fill="currentColor"/><path d="M10.5 24H17L22 16H29L34 24H40" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 16L25 11H32L35 16M22 16V29L28.5 34L35 29V16M22 29L28.5 24L35 29M28.5 24V34" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="41" cy="24" r="3.2" fill="currentColor"/></svg></span><span class="brand-copy"><strong>AidFlow</strong><small>CIVIC MICRO-LOGISTICS</small></span></a>
     <section aria-labelledby="title"><div class="eyebrow">ERROR 404 · ROUTE NOT FOUND</div><h1 id="title">This route has<br><em>gone missing.</em></h1><p>We couldn’t find the page you’re looking for. The address may be incorrect, or the page may have moved. Return to the homepage or choose a destination below.</p><div class="actions"><a class="primary" href="/">Return to homepage <span aria-hidden="true">→</span></a><a class="secondary" href="/#overview">Open AidFlow</a></div><nav class="links" aria-label="Relevant sections"><strong>GO TO A SECTION</strong><a href="/?section=aid-batches">Aid batches</a><a href="/?section=dispatch-board">Dispatch board</a><a href="/?section=resilience-lab">Resilience lab</a></nav></section>
-    <footer><span>© 2026 AidFlow</span><span>Built around safer handovers.</span></footer>
+    <footer><span>© <span id="copyright-year">2026</span> AidFlow</span><span>Built around safer handovers.</span></footer>
+  <script>
+    document.getElementById("copyright-year").textContent = String(new Date().getFullYear());
+  </script>
   </main>
 </body>
 </html>
