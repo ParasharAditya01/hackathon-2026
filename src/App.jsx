@@ -11,6 +11,19 @@ import {
 } from "./lib/dispatch.js";
 
 const STORAGE_KEY = "aidflow-operational-prototype-v1";
+
+const documentTitles = {
+  Overview: "AidFlow | Civic Aid Operations",
+  "Aid batches": "Aid Batches & Surplus Inventory | AidFlow",
+  "Dispatch board": "Dispatch Planning & Deliveries | AidFlow",
+  Riders: "Rider Fleet & Capacity | AidFlow",
+  "Receiving sites": "Receiving Sites & Aid Demand | AidFlow",
+  Reservations: "Aid Reservations & Claim Queue | AidFlow",
+  "Alerts & audit": "Operational Alerts & Audit Trail | AidFlow",
+  "Resilience lab": "Resilience Lab & Failure Simulations | AidFlow",
+};
+const landingDocumentTitle = "AidFlow | Time-Critical Surplus & Civic Aid";
+
 const navItems = [
   ["Overview", LayoutDashboard], ["Aid batches", Boxes], ["Dispatch board", MapPinned],
   ["Riders", Bike], ["Receiving sites", Warehouse], ["Reservations", Clock3],
@@ -185,6 +198,10 @@ export default function App() {
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => setToast(""), 3200);
   };
+
+  useEffect(() => {
+    document.title = entered ? (documentTitles[page] || documentTitles.Overview) : landingDocumentTitle;
+  }, [entered, page]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 760px)");

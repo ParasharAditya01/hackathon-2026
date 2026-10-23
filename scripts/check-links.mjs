@@ -123,6 +123,8 @@ try {
   page.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
   await page.goto(baseURL, { waitUntil: "networkidle" });
   await page.locator(".landing-page").waitFor({ timeout: 10000 });
+  if ((await page.title()) !== "AidFlow | Time-Critical Surplus & Civic Aid") throw new Error("Incorrect landing-page title: " + await page.title());
+  console.log("PASS document title · landing page");
 
   const faviconLinks = await page.locator('link[rel~="icon"], link[rel="apple-touch-icon"]').evaluateAll((links) =>
     links.map((link) => ({ rel: link.rel, type: link.type, sizes: link.sizes, href: link.getAttribute("href") })),
@@ -180,6 +182,8 @@ try {
   await page.evaluate(() => sessionStorage.setItem("aidflow-entered", "1"));
   await page.reload({ waitUntil: "networkidle" });
   await page.locator(".page-content").waitFor();
+  await page.waitForFunction(() => document.title === "AidFlow | Civic Aid Operations");
+  console.log("PASS document title · Overview");
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
   const brand = page.getByRole("link", { name: "AidFlow home — Overview" });
   const brandGeometry = await brand.evaluate(element => { const rect = element.getBoundingClientRect(); const mark = element.querySelector(".brand-mark"); const markRect = mark.getBoundingClientRect(); return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height, color: getComputedStyle(element.querySelector(".brand-copy strong")).color, background: getComputedStyle(element.closest(".sidebar")).backgroundColor }; });
@@ -189,12 +193,25 @@ try {
   if (await brand.getAttribute("href") !== "#overview") throw new Error("Workspace logo link does not point to the Overview home target.");
   console.log("PASS workspace logo link · accessible name, Overview destination, square mark, fixed layout dimensions");
 
+  const expectedTitles = {
+  "Overview": "AidFlow | Civic Aid Operations",
+  "Aid batches": "Aid Batches & Surplus Inventory | AidFlow",
+  "Dispatch board": "Dispatch Planning & Deliveries | AidFlow",
+  "Riders": "Rider Fleet & Capacity | AidFlow",
+  "Receiving sites": "Receiving Sites & Aid Demand | AidFlow",
+  "Reservations": "Aid Reservations & Claim Queue | AidFlow",
+  "Alerts & audit": "Operational Alerts & Audit Trail | AidFlow",
+  "Resilience lab": "Resilience Lab & Failure Simulations | AidFlow"
+};
   for (const section of sections) {
     await page.locator(".nav-item").filter({ hasText: section }).click();
     const current = (await page.locator(".breadcrumb strong").innerText()).trim();
     if (current !== section) throw new Error('Navigation item "' + section + '" opened "' + current + '" instead.');
     await page.locator(".page-content").waitFor();
-    console.log("PASS workspace navigation · " + section);
+    const expectedTitle = expectedTitles[section];
+    await page.waitForFunction((title) => document.title === title, expectedTitle);
+    if ((await page.title()) !== expectedTitle) throw new Error("Incorrect document title for " + section + ": " + await page.title());
+    console.log("PASS workspace navigation and title · " + section + " · " + expectedTitle);
   }
 
   const contextualChecks = [
