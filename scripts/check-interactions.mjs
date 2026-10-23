@@ -92,6 +92,10 @@ async function resetFromScenarios(page, accept) {
 }
 
 async function createAllocation(page, quantity, submitTwice = false) {
+  // Each allocation assertion starts from a clean synthetic dataset. Earlier
+  // lifecycle checks may have consumed stock or changed site/rider capacity.
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: "networkidle" });
   await navigate(page, "Dispatch board");
   const form = page.locator("form.form-card").first();
   await form.getByLabel("Aid batch").selectOption("B-180");
