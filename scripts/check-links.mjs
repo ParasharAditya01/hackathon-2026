@@ -3,6 +3,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
 
 const baseURL = "http://127.0.0.1:4180";
+const routeIds = new Set(["overview-page", "aid-batches-page", "dispatch-board-page", "riders-page", "receiving-sites-page", "reservations-page", "alerts-audit-page", "resilience-lab-page"]);
 const sections = [
   "Overview",
   "Aid batches",
@@ -54,7 +55,7 @@ async function auditAnchors(page, contextName) {
     if (url.origin === new URL(baseURL).origin && url.hash) {
       const id = decodeURIComponent(url.hash.slice(1));
       const exists = await page.evaluate((targetId) => Boolean(document.getElementById(targetId)), id);
-      if (!exists) failures.push(contextName + ": dead anchor " + url.hash + " (" + anchor.text + ")");
+      if (!exists && !routeIds.has(id)) failures.push(contextName + ": dead anchor " + url.hash + " (" + anchor.text + ")");
       else console.log("PASS internal anchor · " + contextName + " · " + url.hash + " · " + (anchor.text || "(unlabelled)"));
     } else if (url.origin === new URL(baseURL).origin) {
       const response = await page.context().request.get(url.href, { timeout: 10000 });
@@ -160,6 +161,30 @@ try {
     await page.locator(".page-content").waitFor();
     console.log("PASS workspace navigation · " + section);
   }
+
+  const contextualChecks = [
+    ["Overview", "Aid batches"], ["Overview", "Dispatch board"], ["Overview", "Resilience lab"],
+    ["Aid batches", "Dispatch board"], ["Dispatch board", "Reservations"],
+    ["Riders", "Dispatch board"], ["Receiving sites", "Dispatch board"],
+    ["Reservations", "Alerts & audit"], ["Alerts & audit", "Resilience lab"],
+    ["Resilience lab", "Receiving sites"],
+  ];
+  for (const [from, to] of contextualChecks) {
+    await page.locator(".nav-item").filter({ hasText: from }).click();
+    await page.locator(".related-links").getByRole("link", { name: to, exact: false }).filter({ hasText: to }).first().click();
+    const current = (await page.locator(".breadcrumb strong").innerText()).trim();
+    if (current !== to) throw new Error("Contextual link from " + from + " did not navigate to " + to + "; got " + current);
+    console.log("PASS contextual link · " + from + " → " + to);
+  }
+  for (const target of ["Overview", "Aid batches", "Dispatch board", "Reservations", "Resilience lab"]) {
+    await page.locator(".footer-nav").getByRole("link", { name: target, exact: true }).click();
+    const current = (await page.locator(".breadcrumb strong").innerText()).trim();
+    if (current !== target) throw new Error("Footer link did not navigate to " + target + "; got " + current);
+    console.log("PASS footer quick link · " + target);
+  }
+  await page.locator(".breadcrumb-home").click();
+  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") throw new Error("Breadcrumb home link did not return to Overview.");
+  console.log("PASS breadcrumb home link · Overview");
 
   await verifyExternalDestinations(externalAnchors);
   if (pageErrors.length || consoleErrors.length) throw new Error("Browser errors during link audit: " + [...pageErrors, ...consoleErrors].join("; "));
