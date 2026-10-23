@@ -501,6 +501,25 @@ export default function App() {
   }[page]();
   const pageWithRelatedLinks = <div className="page-route" id={pageRoutes[page]}>{pageContent}<RelatedLinks page={page} onNavigate={navigateTo} /></div>;
 
+  const isNotFoundPath = typeof window !== "undefined" && window.location.pathname !== "/";
+  if (isNotFoundPath) return <main className="not-found-page">
+    <a href="/" className="not-found-brand" aria-label="AidFlow home"><span className="not-found-mark"><AidFlowMark /></span><span><strong>AidFlow</strong><small>CIVIC MICRO-LOGISTICS</small></span></a>
+    <section className="not-found-content" aria-labelledby="not-found-title">
+      <p className="not-found-code">ERROR 404 · ROUTE NOT FOUND</p>
+      <h1 id="not-found-title">This route has<br /><em>gone missing.</em></h1>
+      <p className="not-found-copy">We couldn’t find the page you’re looking for. The address may be incorrect, or the page may have moved. Your aid operations are still one step away.</p>
+      <div className="not-found-actions">
+        <a className="not-found-primary" href="/">Return to homepage <ArrowRight size={16} aria-hidden="true" /></a>
+        <button className="not-found-secondary" type="button" onClick={() => { setPage("Overview"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Open operations</button>
+      </div>
+      <div className="not-found-links"><span>GO TO A SECTION</span>
+        <button type="button" onClick={() => { setPage("Aid batches"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Aid batches <ArrowRight size={13} aria-hidden="true" /></button>
+        <button type="button" onClick={() => { setPage("Dispatch board"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Dispatch board <ArrowRight size={13} aria-hidden="true" /></button>
+        <button type="button" onClick={() => { setPage("Resilience lab"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Resilience lab <ArrowRight size={13} aria-hidden="true" /></button>
+      </div>
+    </section>
+    <footer className="not-found-footer"><span>© {new Date().getFullYear()} AidFlow</span><span>Built around safer handovers.</span></footer>
+  </main>;
   if (!entered) return <LandingPage onEnter={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setEntered(true); }} onExplore={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setPage("Resilience lab"); setEntered(true); }} />;
 
   return <div className={"app-shell" + (mobileMenuOpen ? " mobile-nav-open" : "")}>
