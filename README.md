@@ -2,19 +2,11 @@
 
 **Safety-first coordination for perishable surplus and essential aid.**
 
-AidFlow is a civic micro-logistics hackathon prototype for donors, volunteer riders, receiving shelters, and operations coordinators.
+AidFlow is a civic micro-logistics prototype connecting donors, volunteer riders, and receiving shelters. It is designed around expiry-aware dispatch, capacity-constrained allocation, reservation timeouts, compatibility rules, and safe recovery when demand changes.
 
-## Current prototype capabilities
+## Project status
 
-- Register synthetic donation batches with quantities and safe-use windows.
-- View remaining stock and deadline urgency.
-- Reserve loads against available rider capacity and receiving-site demand.
-- Automatically split a batch across eligible riders and shelters.
-- Block allocations that violate expiry buffer, capacity, open demand, site status, or resource prerequisites.
-- Simulate ghost-reservation expiry and release stock/rider capacity.
-- Mark assignments in transit, simulate a receiving-site closure, and attempt a compatible reroute.
-- Escalate when no safe fallback destination is available.
-- Record session events in an in-memory activity feed.
+Phase 2: project foundation. The current scaffold establishes the app shell and development setup. Dispatch logic, persistence, and operational workflows are not implemented yet.
 
 ## Run locally
 
@@ -25,30 +17,21 @@ npm install
 npm run dev
 ```
 
-Build and preview:
+Build and preview: `npm run build` and `npm run preview`.
 
-```bash
-npm run build
-npm run preview
-```
+## Architecture
 
-## Project structure
-
-- `src/App.jsx`: interactive operations dashboard and simulation controls.
-- `src/lib/dispatch.js`: pure eligibility, allocation, timeout, and rerouting rules.
-- `src/styles.css`: responsive visual system and application layouts.
+- `src/App.jsx`: application shell and primary navigation.
+- `src/styles.css`: responsive design tokens and layout styles.
 - `src/main.jsx`: React entry point.
-- `docs/architecture.md`: domain model, safety invariants, and limitations.
+- `docs/architecture.md`: domain boundaries, safety invariants, and implementation sequence.
 
-## Important limitations
+## Safety principles
 
-This is a **local, in-memory demonstration**, not a production dispatch service. Refreshing the page resets demo state. There is no authenticated backend, database, real-time multi-user sync, GPS/navigation integration, or server-enforced reservation expiry. The timeout is deliberately triggerable for judging. Travel times and all seed records are synthetic. Do not use this prototype to make real food-safety or medical-handling decisions.
+1. Reject assignments that cannot arrive before the safe-use deadline plus a configured safety margin.
+2. Reservation expiry and food expiry are distinct states.
+3. Allocation never exceeds available donor quantity, rider capacity, or open shelter demand.
+4. Shelter compatibility requirements are hard constraints, not ranking preferences.
+5. If no safe destination exists, escalate rather than pretending delivery succeeded.
 
-## Safety invariants
-
-1. Allocation quantity must be positive and within batch remainder, rider capacity, and open demand.
-2. Arrival estimate plus a 10-minute safety buffer must fit before the batch deadline.
-3. Shelter resource requirements are hard constraints.
-4. Unconfirmed reservations can be released to return stock and riders to the demo pool.
-5. Changed demand is rechecked; unsafe reroutes escalate instead of being marked delivered.
-6. Production deployment requires authoritative server-side enforcement and atomic updates.
+This prototype is not a substitute for local food-safety rules, medical guidance, or professional handling requirements.
