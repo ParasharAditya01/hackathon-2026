@@ -115,9 +115,6 @@ try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  await context.addInitScript(() => {
-    try { sessionStorage.removeItem("aidflow-entered"); } catch {}
-  });
   const page = await context.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
