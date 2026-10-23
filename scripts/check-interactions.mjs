@@ -257,6 +257,21 @@ try {
   }
   console.log("PASS reservation cancellation before pickup");
 
+  // An impossible travel estimate must be blocked, and the result shortcut must still work.
+  await navigate(page, "Dispatch board");
+  const impossibleForm = page.locator("form.form-card").first();
+  await impossibleForm.getByLabel("Aid batch").selectOption("B-180");
+  await impossibleForm.getByLabel("Units to allocate").fill("10");
+  await impossibleForm.getByLabel("Estimated travel (minutes)").fill("600");
+  await impossibleForm.getByLabel("Safety buffer (minutes)").fill("5");
+  await impossibleForm.getByRole("button", { name: /Find feasible split/ }).click();
+  await page.getByText("No feasible allocation", { exact: true }).waitFor();
+  await page.getByRole("button", { name: /Review reservations/ }).click();
+  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Reservations") {
+    throw new Error("Review reservations did not navigate to Reservations after a blocked plan.");
+  }
+  console.log("PASS infeasible-plan safety block and Review reservations shortcut");
+
   // Failure/disposition branch must change the assignment state and expose the correct next action.
   await page.getByRole("button", { name: /Open navigation menu/ }).count().then(async count => {
     if (count) await navigate(page, "Resilience lab");
