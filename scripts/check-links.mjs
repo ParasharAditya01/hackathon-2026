@@ -117,6 +117,9 @@ try {
   let page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    try { sessionStorage.removeItem("aidflow-entered"); } catch {}
+  });
   await page.goto(baseURL, { waitUntil: "networkidle" });
 
   let externalAnchors = await auditAnchors(page, "landing page");
