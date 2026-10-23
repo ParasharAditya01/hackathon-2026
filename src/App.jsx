@@ -179,9 +179,13 @@ function QuantityBar({ value, total }) {
 }
 
 export default function App() {
-  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem("aidflow-entered") === "1"; } catch { return false; } });
+  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem("aidflow-entered") === "1" || new URLSearchParams(window.location.search).has("section"); } catch { return false; } });
   const [data, setData] = useState(loadInitialState);
-  const [page, setPage] = useState("Overview");
+  const [page, setPage] = useState(() => {
+    if (typeof window === "undefined") return "Overview";
+    const requested = new URLSearchParams(window.location.search).get("section");
+    return ({ "aid-batches": "Aid batches", "dispatch-board": "Dispatch board", "resilience-lab": "Resilience lab" })[requested] || "Overview";
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobileNavViewport, setIsMobileNavViewport] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches);
   const mobileMenuButtonRef = useRef(null);
