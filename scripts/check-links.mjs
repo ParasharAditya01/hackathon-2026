@@ -130,13 +130,8 @@ try {
   }
   console.log("PASS landing page links · brand and footer return to #top");
 
-  await page.close();
-  page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  page.on("pageerror", error => pageErrors.push(error.message));
-  await page.addInitScript(() => {
-    try { sessionStorage.setItem("aidflow-entered", "1"); } catch {}
-  });
-  await page.goto(baseURL, { waitUntil: "networkidle" });
+  await page.evaluate(() => sessionStorage.setItem("aidflow-entered", "1"));
+  await page.reload({ waitUntil: "networkidle" });
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
   const brand = page.locator(".sidebar .brand");
