@@ -1576,3 +1576,67 @@ img, video { block-size: auto; }
   .testimonial-pending { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 22px 18px; }
   .testimonial-pending-status { justify-self: start; text-align: left; }
 }
+
+
+/* Premium AidFlow footer system — shared visual language across public and operations views. */
+.landing-footer {
+  display:block;
+  width:100%;
+  border-top:1px solid #DED4C8;
+  background:#FFFCF7;
+  color:#625851;
+  font-size:12px;
+}
+.landing-footer-main {
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(150px,.8fr) minmax(130px,.65fr);
+  gap:clamp(24px,5vw,72px);
+  max-width:1296px;
+  margin:0 auto;
+  padding:clamp(32px,5vw,58px) clamp(20px,5vw,56px) 34px;
+}
+.landing-footer-about { min-width:0; }
+.landing-footer-brand { display:inline-flex; align-items:center; gap:10px; color:#35121F; font-size:22px; font-weight:800; letter-spacing:-.8px; }
+.landing-footer-mark { display:grid; place-items:center; width:38px; height:38px; border:1px solid #DED4C8; border-radius:8px; background:#F5F0E7; }
+.landing-footer-mark .aidflow-mark { width:29px; height:29px; color:#641F32; }
+.landing-footer-about p { max-width:38ch; margin:16px 0 12px; color:#625851; font-size:13px; line-height:1.8; }
+.landing-footer-note { display:inline-block; color:#786E67; font-size:10px; line-height:1.7; }
+.landing-footer-nav { display:flex; align-items:flex-start; flex-direction:column; gap:13px; min-width:0; }
+.landing-footer-heading { margin:2px 0 5px; color:#35121F; font-size:10px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; }
+.landing-footer-nav a { max-width:100%; color:#625851; font-size:12px; line-height:1.6; text-underline-offset:4px; overflow-wrap:anywhere; }
+.landing-footer-nav a:hover { color:#641F32; text-decoration:underline; }
+.landing-footer-nav a:focus-visible, .landing-footer-brand:focus-visible { outline:3px solid #B69A78; outline-offset:4px; border-radius:3px; }
+.landing-footer-nav button { display:inline-flex; align-items:center; gap:8px; min-height:40px; margin-top:2px; padding:0 13px; border:1px solid #CDBDB1; border-radius:5px; background:#35121F; color:#FFFCF7; font-size:11px; font-weight:700; cursor:pointer; }
+.landing-footer-nav button:hover { border-color:#641F32; background:#641F32; }
+.landing-footer-nav button:focus-visible { outline:3px solid #B69A78; outline-offset:3px; }
+.landing-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 22px; max-width:1296px; margin:0 auto; padding:18px clamp(20px,5vw,56px) 22px; border-top:1px solid #DED4C8; color:#786E67; font-size:10px; line-height:1.7; }
+.landing-footer-bottom span { min-width:0; overflow-wrap:anywhere; }
+.app-footer { display:block; padding-top:23px; border-top:1px solid var(--line); }
+.app-footer-main { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:24px; }
+.app-footer-brand { min-width:0; }
+.app-footer-brand-name { gap:9px; }
+.app-footer-brand p { color:#625851; }
+.app-footer-disclaimer { display:inline-block; margin-top:3px; color:#786E67; }
+.footer-nav { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px 17px; min-width:0; }
+.footer-nav-link { color:#625851; font-size:11px; line-height:1.6; text-underline-offset:4px; }
+.footer-nav-link:hover, .app-footer-bottom a:hover { color:#641F32; text-decoration:underline; }
+.footer-nav-link:focus-visible, .app-footer-bottom a:focus-visible { outline:3px solid #B69A78; outline-offset:3px; border-radius:2px; }
+.app-footer-bottom { color:#786E67; }
+.app-footer-bottom a { color:#641F32; font-weight:700; text-underline-offset:3px; }
+@media (max-width:760px) {
+  .landing-footer-main { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px 20px; padding:32px 20px 26px; }
+  .landing-footer-about { grid-column:1/-1; }
+  .landing-footer-nav { gap:11px; }
+  .landing-footer-legal { grid-column:auto; }
+  .landing-footer-bottom { align-items:flex-start; flex-direction:column; padding:16px 20px 20px; }
+  .app-footer-main { grid-template-columns:minmax(0,1fr); gap:20px; }
+  .footer-nav { justify-content:flex-start; gap:10px 16px; }
+  .app-footer-bottom { gap:8px; }
+}
+@media (max-width:380px) {
+  .landing-footer-main { grid-template-columns:minmax(0,1fr); gap:24px; padding-right:17px; padding-left:17px; }
+  .landing-footer-about, .landing-footer-legal { grid-column:auto; }
+  .landing-footer-bottom { padding-right:17px; padding-left:17px; }
+  .app-footer-brand-name { align-items:flex-start; }
+  .footer-nav { gap:10px 13px; }
+}
