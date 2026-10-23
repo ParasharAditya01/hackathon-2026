@@ -117,9 +117,11 @@ try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   const pageErrors = [];
+  const consoleErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
   await page.goto(baseURL, { waitUntil: "networkidle" });
-  console.log("DEBUG initial browser render", JSON.stringify(await page.evaluate(() => ({ url: location.href, body: document.body.innerText.slice(0, 300), root: document.getElementById("root")?.innerHTML.slice(0, 300) }))), JSON.stringify(pageErrors));
+  await page.locator(".landing-page").waitFor({ timeout: 10000 });
 
   let externalAnchors = await auditAnchors(page, "landing page");
   const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
@@ -133,13 +135,11 @@ try {
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
   const brand = page.locator(".sidebar .brand");
-  const overviewTarget = await page.evaluate(() => Boolean(document.getElementById("overview")));
-  if (!overviewTarget) throw new Error('Workspace brand points to "#overview", but no element has id="overview".');
   await brand.click();
   if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") {
-    throw new Error("Workspace brand did not return to the Overview page.");
+    throw new Error("Workspace brand button did not navigate to Overview.");
   }
-  console.log("PASS workspace brand · #overview target exists and click returns to Overview");
+  console.log("PASS workspace brand button · click returns to Overview");
 
   for (const section of sections) {
     await page.locator(".nav-item").filter({ hasText: section }).click();
@@ -150,7 +150,7 @@ try {
   }
 
   await verifyExternalDestinations(externalAnchors);
-  if (pageErrors.length) throw new Error("Browser errors during link audit: " + pageErrors.join("; "));
+  if (pageErrors.length || consoleErrors.length) throw new Error("Browser errors during link audit: " + [...pageErrors, ...consoleErrors].join("; "));
   console.log("Link audit passed: internal anchors, brand links, and all workspace navigation destinations are valid.");
 } finally {
   if (browser) await browser.close();
