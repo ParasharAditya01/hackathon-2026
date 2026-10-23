@@ -45,6 +45,11 @@ export default function App() {
   const delivered = assignments.filter(a=>a.state==="delivered").length;
   const currentBatch = batches.find(b=>b.id===selectedBatch);
   const activeAssignments = assignments.filter(a=>["reserved","in_transit","escalated"].includes(a.state));
+  const demandAvailableShelters = (excludeAssignmentId = null) => shelters.map(s => {
+    const held = assignments.filter(a => a.id !== excludeAssignmentId && ["reserved","in_transit","escalated"].includes(a.state) && a.shelterId === s.id)
+      .reduce((tot,a) => { const b=batches.find(x=>x.id===a.batchId); if(b) tot[b.type]=(tot[b.type]||0)+a.quantity; return tot; }, {});
+    return {...s,demand:Object.fromEntries(Object.entries(s.demand).map(([type,qty])=>[type,Math.max(0,qty-(held[type]||0))]))};
+  });
   const nav = [{label:"Overview",icon:LayoutDashboard},{label:"Aid batches",icon:Boxes},{label:"Dispatch board",icon:MapPinned},{label:"Riders",icon:Bike},{label:"Receiving sites",icon:Warehouse}];
 
   function createBatch(e) {
@@ -56,7 +61,7 @@ export default function App() {
     setBatches(prev=>[batch,...prev]);setSelectedBatch(id);addEvent("Donation batch registered",`${id}: ${quantity} ${draft.type} from ${batch.donor}`);setDraft({donor:"",type:"meals",quantity:"40",minutes:"45",pickup:"Local donor"});setTab("Aid batches");announce("Batch added to the live demo state.");
   }
   function allocate() {
-    const batch=batches.find(b=>b.id===selectedBatch), rider=riders.find(r=>r.id===selectedRider), shelter=shelters.find(s=>s.id===selectedShelter);
+    const batch=batches.find(b=>b.id===selectedBatch), rider=riders.find(r=>r.id===selectedRider), shelter=demandAvailableShelters().find(s=>s.id===selectedShelter);
     if(!batch||!rider||!shelter){announce("Select a batch, rider and receiving site.");return;}
     const quantity=Math.min(batch.remaining,rider.capacity,shelter.demand[batch.type]||0);
     const result=allocateBatch({...batch,remaining:quantity},[rider],[shelter],15);
@@ -69,7 +74,7 @@ export default function App() {
   function splitBatch() {
     const batch=batches.find(b=>b.id===selectedBatch);
     if(!batch){announce("Choose a batch first.");return;}
-    const result=allocateBatch(batch,riders,shelters,15);
+    const result=allocateBatch(batch,riders,demandAvailableShelters(),15);
     if(!result.assignments.length){announce("No safe allocation found. Check capacity, demand, expiry and prerequisites.");addEvent("Split allocation blocked","No eligible rider/site combinations.","warning");return;}
     const created=result.assignments.map(a=>({...a,state:"reserved"}));
     const used=created.reduce((n,a)=>n+a.quantity,0);
@@ -97,7 +102,8 @@ export default function App() {
     const original=shelters.find(s=>s.id===target.shelterId);
     setShelters(prev=>prev.map(s=>s.id===target.shelterId?{...s,status:"closed",demand:{...s.demand,[batches.find(b=>b.id===target.batchId)?.type||"meals"]:0}}:s));
     const batch=batches.find(b=>b.id===target.batchId);
-    const recovered=rerouteAssignment(target,shelters.map(s=>s.id===target.shelterId?{...s,status:"closed",demand:{...s.demand,[batch?.type||"meals"]:0}}:s),batch,12);
+    const rerouteSites=demandAvailableShelters(target.id).map(s=>s.id===target.shelterId?{...s,status:"closed",demand:{...s.demand,[batch?.type||"meals"]:0}}:s);
+    const recovered=rerouteAssignment(target,rerouteSites,batch,12);
     setAssignments(prev=>prev.map(a=>a.id===target.id?recovered:a));
     addEvent(recovered.state==="escalated"?"Reroute needs intervention":"Shelter demand changed; rerouted",`${original?.name||"Original site"} closed to this aid. ${recovered.reason}.`,recovered.state==="escalated"?"warning":"success");
     announce(recovered.state==="escalated"?"No safe fallback. Assignment escalated for coordinator review.":"Demand changed; assignment rerouted to a compatible site.");
