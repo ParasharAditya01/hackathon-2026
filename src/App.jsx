@@ -286,8 +286,9 @@ export default function App() {
     ["expiry","01","Urgent safe-use deadline","Prioritise the batch closest to expiry without bypassing travel and safety margin.",Clock3],
     ["split","02","Split 180 meals","Allocate 180 meals across riders capped at 40 units each.",Boxes],
     ["ghost","03","Unresponsive volunteer","Simulate a 30-minute ghost claim; expire the five-minute reservation and release stock once.",XCircle],
-    ["direct-drop","04","Shelter demand fills in transit","A rider carries 40 meals while a direct drop-off fills Shelter A's demand; recover the incoming cargo.",Truck],
-    ["resources","05","Missing cooking resources","Block raw ration kits from a site without clean water or cooking fuel.",ShieldCheck]
+    ["direct-drop","04","Direct drop fills demand","A direct community drop-off fills Shelter A's demand while a rider is carrying 40 meals.",Truck],
+    ["closure","05","Shelter closes in transit","Close the destination after pickup and review safe alternate sites or escalate.",Warehouse],
+    ["resources","06","Missing cooking resources","Block raw ration kits from a site without clean water or cooking fuel.",ShieldCheck]
   ].map(([key,num,title,detail,Icon]) => <button className="scenario-card" key={key} onClick={() => runDemoScenario(key)}><span className="scenario-number">{num}</span><span className="scenario-icon"><Icon size={19} /></span><strong>{title}</strong><p>{detail}</p><span className="scenario-run">Run scenario <ArrowRight size={14} /></span></button>)}</section><section className="surface section-gap"><PanelHeading eyebrow="SCENARIO OUTPUT" title="Execution log" detail="Each run reports the rule applied and any resulting state changes." />{data.scenarioLog.length ? <div className="scenario-results">{data.scenarioLog.map(s => <article className="scenario-result" key={s.id}><div className="scenario-result-head"><div><strong>{s.title}</strong><small>{new Date(s.at).toLocaleString()}</small></div><Badge tone="success">Executed</Badge></div><ul>{s.lines.map((line,index) => <li key={index}>{line}</li>)}</ul></article>)}</div> : <EmptyState title="No scenarios run" detail="Choose one of the five simulations above to see the engine respond to operational uncertainty." />}</section></div>;
 
   const pageContent = {
