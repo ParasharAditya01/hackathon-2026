@@ -178,6 +178,16 @@ function QuantityBar({ value, total }) {
   return <div className="quantity-bar" aria-label={pct + "% used"}><span style={{ width: pct + "%" }} /></div>;
 }
 
+const API_BASE=(import.meta.env.VITE_API_BASE_URL||"").replace(/\/$/,"");
+function ThankYouPage(){
+ const [status,setStatus]=useState("checking"),[confirmation,setConfirmation]=useState(null);
+ useEffect(()=>{let cancelled=false;const token=new URLSearchParams(location.search).get("token");if(!token||!/^[0-9a-f-]{36}$/i.test(token)){setStatus("unverified");return()=>{cancelled=true;};}
+ fetch(`${API_BASE}/api/confirmations/${encodeURIComponent(token)}`,{cache:"no-store",headers:{Accept:"application/json"}}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok||d.status!=="confirmed")throw Error();return d;}).then(d=>{if(!cancelled){setConfirmation(d);setStatus("confirmed");}}).catch(()=>{if(!cancelled)setStatus("unverified");});return()=>{cancelled=true;};},[]);
+ useEffect(()=>{document.title=status==="confirmed"?"Aid batch registered | AidFlow":"Submission status | AidFlow";const m=document.querySelector('meta[name="description"]');if(m)m.content=status==="confirmed"?"Your aid batch registration was confirmed by AidFlow's backend.":"Verify your AidFlow submission or return to operations.";},[status]);
+ return <main className="thankyou-page"><a className="thankyou-brand" href="/"><span className="thankyou-mark"><AidFlowMark/></span><span><strong>AidFlow</strong><small>CIVIC MICRO-LOGISTICS</small></span></a><section className="thankyou-panel" aria-live="polite" aria-busy={status==="checking"}>
+ {status==="checking"?<><span className="thankyou-symbol"><Clock3 size={25}/></span><p className="thankyou-eyebrow">VERIFYING SUBMISSION</p><h1>Checking your confirmation.</h1><p className="thankyou-copy">The server must verify the saved operation before AidFlow can confirm success.</p></>:status==="confirmed"?<><span className="thankyou-symbol thankyou-success"><CheckCircle2 size={27}/></span><p className="thankyou-eyebrow">BACKEND CONFIRMED</p><h1>Aid batch registered.</h1><p className="thankyou-copy">The server confirmed that your aid batch was saved successfully.</p><div className="thankyou-reference"><span>CONFIRMATION REFERENCE</span><strong>{confirmation.reference}</strong><small>{confirmation.actionLabel}</small></div><div className="thankyou-next"><strong>What happens next?</strong><p>Review the batch, check its safe-use deadline, and plan a feasible dispatch based on rider and receiving-site capacity.</p></div><div className="thankyou-actions"><a className="thankyou-primary" href="/?section=aid-batches">Open aid batches <ArrowRight size={16}/></a><a className="thankyou-secondary" href="/?section=dispatch-board">Go to dispatch board</a></div></>:<><span className="thankyou-symbol thankyou-neutral"><AlertTriangle size={25}/></span><p className="thankyou-eyebrow">NO VERIFIED SUCCESS</p><h1>This submission isn't confirmed.</h1><p className="thankyou-copy">No valid recent backend confirmation could be verified. This page may have been opened directly or the confirmation service may be unavailable. No success is being claimed.</p><div className="thankyou-actions"><a className="thankyou-primary" href="/?section=aid-batches">Return to aid batches <ArrowRight size={16}/></a><a className="thankyou-secondary" href="/">Back to AidFlow home</a></div></>}
+ </section><footer className="thankyou-footer"><span>© {new Date().getFullYear()} AidFlow</span><span>Built around safer handovers.</span></footer></main>;
+}
 export default function App() {
   const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem("aidflow-entered") === "1" || new URLSearchParams(window.location.search).has("section"); } catch { return false; } });
   const [data, setData] = useState(loadInitialState);
@@ -203,7 +213,8 @@ export default function App() {
   const [shelterForm, setShelterForm] = useState({ name: "", zone: "Central", demand: 50, water: false, fuel: false, coldStorage: false, medicalStorage: false });
   const [rerouteChoice, setRerouteChoice] = useState({});
 
-  const isNotFoundPath = typeof window !== "undefined" && window.location.pathname !== "/";
+  const isThankYouPath = typeof window !== "undefined" && window.location.pathname === "/thank-you";
+  const isNotFoundPath = typeof window !== "undefined" && window.location.pathname !== "/" && !isThankYouPath;
 
   const mutate = (operation, successMessage) => {
     const next = clone(data);
@@ -367,22 +378,17 @@ export default function App() {
     if (result?.allocations?.length) setPage("Reservations");
     showToast(result?.allocations?.length ? "Feasible reservations created. Confirm them before pickup." : "No feasible reservation created.");
   };
-  const addBatch = (event) => {
-    event.preventDefault();
-    if (isDuplicateSubmit("batch")) return;
-    const quantity = Number(batchForm.quantity);
-    const pickupAt = new Date(batchForm.pickupAt);
-    const deadline = new Date(batchForm.deadline);
-    if (!batchForm.name.trim() || !batchForm.donor.trim() || !batchForm.location.trim() || !Number.isInteger(quantity) || quantity <= 0 || Number.isNaN(pickupAt.getTime()) || Number.isNaN(deadline.getTime()) || deadline <= pickupAt || deadline <= new Date()) {
-      showToast("Check the required batch details. The safe-use deadline must be after pickup and in the future. Your entries are preserved; correct invalid fields and resubmit.", "error");
-      return;
-    }
-    mutate(next => {
-      const batch = { id: "B-" + Math.random().toString(36).slice(2, 7).toUpperCase(), donor: batchForm.donor.trim(), name: batchForm.name.trim(), type: batchForm.type, original: quantity, available: quantity, reserved: 0, picked: 0, delivered: 0, rejected: 0, pickupAt: pickupAt.toISOString(), deadline: deadline.toISOString(), location: batchForm.location.trim(), handling: batchForm.handling.trim() };
-      next.donations.unshift(batch);
-      addEvent(next, "Aid batch registered", batch.id + " · " + batch.name + " · " + quantity + " units");
-    }, "Aid batch registered.");
-    setBatchForm({ donor: "", name: "", type: "prepared", quantity: 40, pickupAt: dateTimeLocal(-2), deadline: dateTimeLocal(75), location: "", handling: "" });
+  const addBatch = async (event) => {
+    event.preventDefault(); if(isDuplicateSubmit("batch"))return;
+    const quantity=Number(batchForm.quantity),pickupAt=new Date(batchForm.pickupAt),deadline=new Date(batchForm.deadline);
+    if(!batchForm.name.trim()||!batchForm.donor.trim()||!batchForm.location.trim()||!Number.isInteger(quantity)||quantity<=0||Number.isNaN(pickupAt.getTime())||Number.isNaN(deadline.getTime())||deadline<=pickupAt||deadline<=new Date()){showToast("Check required details. The safe-use deadline must be after pickup and in the future. Entries are preserved.","error");return;}
+    const button=event.currentTarget.querySelector('button[type="submit"]');if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent="Saving batch…";}
+    try{const response=await fetch(`${API_BASE}/api/aid-batches`,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({donor:batchForm.donor.trim(),name:batchForm.name.trim(),type:batchForm.type,quantity,pickupAt:pickupAt.toISOString(),deadline:deadline.toISOString(),location:batchForm.location.trim(),handling:batchForm.handling.trim()})});
+      const payload=await response.json().catch(()=>({}));if(!response.ok||payload.status!=="confirmed"||!payload.token||!payload.batch)throw Error(payload.error||"The server did not confirm registration. Entries have been preserved.");
+      mutate(next=>{const x=payload.batch,record={id:x.id,donor:x.donor,name:x.name,type:x.type,original:x.quantity,available:x.quantity,reserved:0,picked:0,delivered:0,rejected:0,pickupAt:x.pickupAt,deadline:x.deadline,location:x.location,handling:x.handling};if(!next.donations.some(d=>d.id===record.id))next.donations.unshift(record);addEvent(next,"Aid batch registered",record.id+" · "+record.name+" · "+x.quantity+" units");});
+      window.location.assign("/thank-you?token="+encodeURIComponent(payload.token));
+    }catch(error){showToast(error.message||"Could not confirm registration. Check the connection and retry; entries are preserved.","error");}
+    finally{if(button){button.disabled=false;button.textContent=button.dataset.originalText||"Register batch";}}
   };
   const addRider = (event) => {
     event.preventDefault();
@@ -523,6 +529,7 @@ export default function App() {
   }[page]();
   const pageWithRelatedLinks = <div className="page-route" id={pageRoutes[page]}>{pageContent}<RelatedLinks page={page} onNavigate={navigateTo} /></div>;
 
+  if (isThankYouPath) return <ThankYouPage />;
   if (isNotFoundPath) return <main className="not-found-page">
     <a href="/" className="not-found-brand" aria-label="AidFlow home"><span className="not-found-mark"><AidFlowMark /></span><span><strong>AidFlow</strong><small>CIVIC MICRO-LOGISTICS</small></span></a>
     <section className="not-found-content" aria-labelledby="not-found-title">
