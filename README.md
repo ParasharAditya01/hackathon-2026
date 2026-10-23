@@ -99,3 +99,8 @@ The repository now includes an initial PostgreSQL schema and a minimal Node.js A
 5. Never put `DATABASE_URL` in frontend environment variables, Vite-prefixed variables, source files, screenshots, or commits. Do not share the database URL in chat.
 
 **Current limitation:** the existing React workspace still uses browser-local storage. It is not connected to this database yet. Do not treat this backend foundation as authentication, authorization, or production-ready aid dispatch. The next implementation stage is secure account/session handling, role checks, transactional domain endpoints, and migration of the UI away from local-only state.
+## Image asset audit
+
+The current UI uses inline SVG artwork for the route illustration and brand mark rather than photographic or raster content images. The only standalone image files in `public/` are the small favicon assets (SVG and PNG); no JPEG, GIF, WebP, AVIF, or other raster content images are currently shipped, so converting photos to modern formats would add files without reducing the current payload. The PNG favicon files are already tiny, and their dimensions are validated by the link audit.
+
+Responsive media safeguards in `src/styles.css` constrain future images, video, and canvas content to the available width and preserve image/video aspect ratios. If content images are added later, use WebP or AVIF with an appropriate fallback when needed, provide intrinsic `width` and `height`, add `srcset`/`sizes` for multiple resolutions, and lazy-load only below-the-fold images. Do not lazy-load critical hero imagery.
