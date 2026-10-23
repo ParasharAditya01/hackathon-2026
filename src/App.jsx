@@ -179,7 +179,6 @@ export default function App() {
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        const firstNavItem = mobileNavRef.current?.querySelector("button.nav-item");
         if (event.shiftKey && (document.activeElement === first || document.activeElement === firstNavItem)) {
           event.preventDefault();
           last.focus();
