@@ -22,7 +22,18 @@ const documentTitles = {
   "Alerts & audit": "Operational Alerts & Audit Trail | AidFlow",
   "Resilience lab": "Resilience Lab & Failure Simulations | AidFlow",
 };
+const documentDescriptions = {
+  Overview: "Explore AidFlow’s demo overview of time-critical surplus aid, safety constraints and civic micro-logistics. Enter the workspace to review the sample operations.",
+  "Aid batches": "Review AidFlow’s sample aid batches, surplus inventory, handling notes and safe-use deadlines. Explore how available supplies are tracked in the demo.",
+  "Dispatch board": "Explore AidFlow’s simulated dispatch assignments, delivery deadlines, rider capacity and rerouting options. Open the workspace to review delivery planning.",
+  Riders: "Review the demo rider fleet, transport types, carrying capacity and availability used in AidFlow’s dispatch planning simulation.",
+  "Receiving sites": "Explore AidFlow’s sample receiving sites, aid demand and available storage or handling resources to understand destination suitability.",
+  Reservations: "Review AidFlow’s simulated aid reservations, claim queue and reservation status for coordinating sample supply with receiving-site needs.",
+  "Alerts & audit": "Explore AidFlow’s demo operational alerts and audit trail to review simulated dispatch events, warnings and recorded workflow changes.",
+  "Resilience lab": "Run AidFlow’s built-in demo scenarios to explore how simulated dispatch responds to delays, unavailable riders, site closures and resource constraints.",
+};
 const landingDocumentTitle = "AidFlow | Time-Critical Surplus & Civic Aid";
+const landingDocumentDescription = "AidFlow coordinates surplus food, riders and receiving sites around safe-use deadlines. Explore a civic micro-logistics demo for safety-first aid dispatch.";
 
 const navItems = [
   ["Overview", LayoutDashboard], ["Aid batches", Boxes], ["Dispatch board", MapPinned],
@@ -200,7 +211,16 @@ export default function App() {
   };
 
   useEffect(() => {
-    document.title = entered ? (documentTitles[page] || documentTitles.Overview) : landingDocumentTitle;
+    const title = entered ? (documentTitles[page] || documentTitles.Overview) : landingDocumentTitle;
+    const description = entered ? (documentDescriptions[page] || documentDescriptions.Overview) : landingDocumentDescription;
+    document.title = title;
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement("meta");
+      metaDescription.name = "description";
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute("content", description);
   }, [entered, page]);
 
   useEffect(() => {
