@@ -41,6 +41,63 @@ function loadInitialState() {
   return createSeedState();
 }
 
+function AidFlowMark({ className = "" }) {
+  return <svg className={"aidflow-mark " + className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <circle cx="7" cy="24" r="3.2" fill="currentColor" />
+    <path className="logo-route" d="M10.5 24H17L22 16H29L34 24H40" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M22 16L25 11H32L35 16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M22 16V29L28.5 34L35 29V16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M22 29L28.5 24L35 29M28.5 24V34" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="41" cy="24" r="3.2" fill="currentColor" />
+  </svg>;
+}
+
+function LandingPage({ onEnter, onExplore }) {
+  return <main className="landing-page">
+    <header className="landing-nav">
+      <a href="#top" className="landing-brand" aria-label="AidFlow home"><span className="landing-mark"><AidFlowMark className="logo-intro" /></span><span className="landing-wordmark">AidFlow<span className="landing-wordmark-dot">.</span><small>CIVIC MICRO-LOGISTICS</small></span></a>
+      <div className="landing-nav-meta"><span className="landing-status"><span /> SAFETY-FIRST DISPATCH</span><button className="landing-nav-cta" onClick={onEnter}>Enter operations <ArrowRight size={15} /></button></div>
+    </header>
+    <section className="landing-hero" id="top">
+      <div className="landing-hero-copy">
+        <p className="landing-kicker"><span /> THE LAST-MILE SPOILAGE TRAP</p>
+        <h1>Move good food.<br /><em>Before time runs out.</em></h1>
+        <p className="landing-lede">AidFlow coordinates surplus, riders and receiving sites around one non-negotiable constraint: aid must arrive while it is still safe to use.</p>
+        <div className="landing-actions"><button className="landing-primary" onClick={onEnter}>Open operations workspace <ArrowRight size={16} /></button><button className="landing-secondary" onClick={onExplore}><Activity size={15} /> Explore the resilience demo</button></div>
+        <div className="landing-proof"><span><ShieldCheck size={15} /> Deadline-aware allocation</span><span><Boxes size={15} /> Capacity-aware splits</span><span><RotateCcw size={15} /> Recovery when plans fail</span></div>
+      </div>
+      <div className="route-illustration" aria-label="Illustration of aid moving from donor to rider to receiving site">
+        <div className="route-illustration-head"><span>THE AIDFLOW ROUTE</span><span className="route-demo-label">DEMO SCENARIO</span></div>
+        <svg className="route-map-svg" viewBox="0 0 560 290" role="img" aria-label="A connected route links a donor parcel, rider handover, and shelter destination">
+          <path className="route-map-grid" d="M0 50H560M0 100H560M0 150H560M0 200H560M0 250H560M70 0V290M140 0V290M210 0V290M280 0V290M350 0V290M420 0V290M490 0V290" />
+          <path className="route-map-road" d="M70 184C132 184 118 87 211 87S300 214 370 214 432 118 495 118" />
+          <path className="route-map-path" d="M70 184C132 184 118 87 211 87S300 214 370 214 432 118 495 118" />
+          <circle cx="70" cy="184" r="13" fill="#f5f0e7" stroke="#641f32" strokeWidth="2" /><circle cx="70" cy="184" r="4" fill="#641f32" />
+          <g transform="translate(177 54)"><rect x="0" y="0" width="68" height="65" rx="4" fill="#fffaf4" stroke="#ded4c8"/><path d="M15 22L34 12L53 22L34 32Z" fill="#e8d7da" stroke="#641f32" strokeWidth="1.5"/><path d="M15 22V43L34 54L53 43V22M34 32V54" fill="none" stroke="#641f32" strokeWidth="1.5" strokeLinejoin="round"/><path d="M34 12V32" stroke="#641f32" strokeWidth="1.5"/></g>
+          <g transform="translate(339 178)"><circle cx="31" cy="31" r="31" fill="#e8d7da"/><circle cx="22" cy="38" r="7" fill="none" stroke="#641f32" strokeWidth="2"/><circle cx="45" cy="38" r="7" fill="none" stroke="#641f32" strokeWidth="2"/><path d="M22 38L29 21H39L45 38M29 21L36 38H22M33 16H39" fill="none" stroke="#641f32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M29 21L25 16H19" fill="none" stroke="#641f32" strokeWidth="2" strokeLinecap="round"/></g>
+          <circle cx="495" cy="118" r="13" fill="#f5f0e7" stroke="#641f32" strokeWidth="2"/><circle cx="495" cy="118" r="4" fill="#641f32"/>
+          <g className="route-map-label" fill="#292522" fontFamily="inherit"><text x="48" y="218">DONOR</text><text x="176" y="42">AID BATCH</text><text x="337" y="264">RIDER</text><text x="458" y="91">SHELTER</text></g>
+          <g className="route-map-time"><rect x="232" y="143" width="91" height="25" rx="12.5" fill="#35121f"/><text x="277.5" y="159" textAnchor="middle" fill="#fffaf4" fontSize="10" fontWeight="700">SAFE ARRIVAL</text></g>
+        </svg>
+        <div className="route-illustration-foot"><span><i className="route-key-dot" /> Route feasibility checked before commitment</span><span>01 / 03</span></div>
+      </div>
+    </section>
+    <section className="landing-stats" aria-label="Demonstration scenario">
+      <div><span className="landing-stat-label">DEMO SUPPLY</span><strong>180 <small>meals</small></strong><p>Prepared food, time-sensitive</p></div>
+      <div><span className="landing-stat-label">RIDER CAPACITY</span><strong>40 <small>units / rider</small></strong><p>Split across feasible trips</p></div>
+      <div><span className="landing-stat-label">SAFE-USE WINDOW</span><strong>75 <small>minutes</small></strong><p>Arrival must beat the deadline</p></div>
+      <div className="landing-stat-note"><span className="landing-note-icon"><Clock3 size={18} /></span><p>Illustrative hackathon scenario. Values are seeded demo data, not live network telemetry.</p></div>
+    </section>
+    <section className="landing-how"><div className="landing-section-intro"><p className="landing-kicker">BUILT FOR THE REAL FAILURE MODES</p><h2>Coordination that holds<br />when plans don't.</h2><p>Operational rules stay explicit. Exceptions become recoverable work, not silent data loss.</p></div><div className="landing-process">
+      <article><span className="process-index">01</span><div><h3>Match before you commit</h3><p>Check stock, travel estimate, rider capacity, site demand and handling prerequisites before a reservation is created.</p></div><span className="process-symbol"><Boxes size={20} /></span></article>
+      <article><span className="process-index">02</span><div><h3>Release ghost reservations</h3><p>Claims expire when volunteers do not act. Eligible stock and capacity return to the pool exactly once.</p></div><span className="process-symbol"><Clock3 size={20} /></span></article>
+      <article><span className="process-index">03</span><div><h3>Recover when demand shifts</h3><p>Direct drop-offs and shelter closures trigger cancellation, reroute or escalation paths while cargo remains accounted for.</p></div><span className="process-symbol"><RotateCcw size={20} /></span></article>
+      <article><span className="process-index">04</span><div><h3>Protect handling constraints</h3><p>Raw kits and infant formula require recorded water and fuel; perishable and medical aid require compatible storage.</p></div><span className="process-symbol"><ShieldCheck size={20} /></span></article>
+    </div></section>
+    <footer className="landing-footer"><a href="#top" className="landing-footer-brand"><AidFlowMark /> AidFlow</a><span>Designed for the last mile. Built around safe handovers.</span><button onClick={onEnter}>Enter workspace <ArrowRight size={14} /></button></footer>
+  </main>;
+}
+
 function Badge({ children, tone = "neutral" }) {
   return <span className={"badge badge-" + tone}>{children}</span>;
 }
@@ -65,6 +122,7 @@ function QuantityBar({ value, total }) {
 }
 
 export default function App() {
+  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem("aidflow-entered") === "1"; } catch { return false; } });
   const [data, setData] = useState(loadInitialState);
   const [page, setPage] = useState("Overview");
   const [now, setNow] = useState(Date.now());
@@ -300,9 +358,11 @@ export default function App() {
     "Alerts & audit": renderAlerts, "Resilience lab": renderScenarios
   }[page]();
 
+  if (!entered) return <LandingPage onEnter={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setEntered(true); }} onExplore={() => { try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} setPage("Resilience lab"); setEntered(true); }} />;
+
   return <div className="app-shell">
-    <aside className="sidebar"><a className="brand" href="#overview" onClick={e => { e.preventDefault(); setPage("Overview"); }} aria-label="AidFlow overview"><span className="brand-mark"><HandHeart size={21} /></span><span className="brand-copy"><strong>aidflow</strong><small>CIVIC OPERATIONS</small></span></a><div className="workspace-label">WORKSPACE</div><nav className="primary-nav" aria-label="Primary navigation">{navItems.map(([label, Icon]) => <button className={"nav-item " + (page === label ? "is-active" : "")} key={label} type="button" onClick={() => setPage(label)} aria-current={page === label ? "page" : undefined}><Icon size={18} strokeWidth={1.8} /><span>{label}</span>{label === "Dispatch board" && <span className="nav-count">{activeAssignments.length}</span>}{label === "Reservations" && <span className="nav-count">{pendingReservations.length}</span>}</button>)}</nav><div className="sidebar-bottom"><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div></aside>
-    <main className="main-content"><header className="topbar"><div className="breadcrumb"><span>AidFlow</span><span className="breadcrumb-slash">/</span><strong>{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div></header><div className="page-wrap">{pageContent}<footer className="app-footer"><span><span className="footer-mark"><HandHeart size={13} /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></footer></div></main>
+    <aside className="sidebar"><a className="brand" href="#overview" onClick={e => { e.preventDefault(); setPage("Overview"); }} aria-label="AidFlow overview"><span className="brand-mark"><AidFlowMark /></span><span className="brand-copy"><strong>aidflow</strong><small>CIVIC OPERATIONS</small></span></a><div className="workspace-label">WORKSPACE</div><nav className="primary-nav" aria-label="Primary navigation">{navItems.map(([label, Icon]) => <button className={"nav-item " + (page === label ? "is-active" : "")} key={label} type="button" onClick={() => setPage(label)} aria-current={page === label ? "page" : undefined}><Icon size={18} strokeWidth={1.8} /><span>{label}</span>{label === "Dispatch board" && <span className="nav-count">{activeAssignments.length}</span>}{label === "Reservations" && <span className="nav-count">{pendingReservations.length}</span>}</button>)}</nav><div className="sidebar-bottom"><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div></aside>
+    <main className="main-content"><header className="topbar"><div className="breadcrumb"><span>AidFlow</span><span className="breadcrumb-slash">/</span><strong>{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div></header><div className="page-wrap">{pageContent}<footer className="app-footer"><span><span className="footer-mark"><AidFlowMark /></span> AidFlow <span className="footer-separator">/</span> Civic micro-logistics</span><span>Synthetic data · Browser-local state · No live dispatch</span></footer></div></main>
     {toast && <div className="toast-message" role="status" aria-live="polite">{toast}</div>}
   </div>;
 }
