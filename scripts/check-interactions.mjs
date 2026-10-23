@@ -238,6 +238,11 @@ try {
   await siteCard.getByRole("button", { name: "Close site" }).waitFor();
   console.log("PASS receiving-site form, resource controls, direct drop-off, demand edit, and status toggle");
 
+  // Return to a known fixture so the extra test rider/site cannot alter allocation cardinality.
+  page.once("dialog", dialog => dialog.accept());
+  await page.locator(".profile-button").click();
+  await page.getByText("Demo reset to seeded scenario data.").waitFor();
+
   // Allocation must create reservations once; reservation and assignment buttons advance real state.
   const allocationCard = await createAllocation(page, 40, true);
   await allocationCard.getByRole("button", { name: /Confirm claim/ }).click();
