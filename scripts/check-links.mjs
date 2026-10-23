@@ -220,7 +220,7 @@ try {
 
   let externalAnchors = await auditAnchors(page, "landing page");
   const landingAnchorTargetsValid = await page.locator('.landing-nav a[href="#top"], .landing-footer a[href="#top"]').evaluateAll(anchors =>
-    anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
+    anchors.length >= 3 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
   );
   if (!landingAnchorTargetsValid) throw new Error("Landing header/footer brand links do not both resolve to the #top section.");
   const landingBrand = page.getByRole("link", { name: "AidFlow home" }).first();
