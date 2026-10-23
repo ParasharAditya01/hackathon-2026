@@ -1186,3 +1186,15 @@ textarea {
     outline-offset: 3px;
   }
 }
+
+
+/* Disabled controls remain visibly unavailable and never imply a clickable action. */
+.primary-button:disabled,
+.secondary-button:disabled,
+.small-button:disabled,
+.text-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
