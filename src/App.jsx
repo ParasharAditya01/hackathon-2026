@@ -194,6 +194,7 @@ export default function App() {
   const lastFormSubmitAt = useRef({});
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState("");
+  const [toastKind, setToastKind] = useState("success");
   const [search, setSearch] = useState("");
   const [allocation, setAllocation] = useState({ donationId: "B-180", quantity: 180, travelMinutes: 15, safetyBufferMinutes: 10 });
   const [allocationResult, setAllocationResult] = useState(null);
@@ -211,7 +212,8 @@ export default function App() {
     if (successMessage) showToast(successMessage);
     return outcome;
   };
-  const showToast = (message) => {
+  const showToast = (message, kind = "success") => {
+    setToastKind(kind);
     setToast(message);
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => setToast(""), 4200);
@@ -372,7 +374,7 @@ export default function App() {
     const pickupAt = new Date(batchForm.pickupAt);
     const deadline = new Date(batchForm.deadline);
     if (!batchForm.name.trim() || !batchForm.donor.trim() || !batchForm.location.trim() || !Number.isInteger(quantity) || quantity <= 0 || Number.isNaN(pickupAt.getTime()) || Number.isNaN(deadline.getTime()) || deadline <= pickupAt || deadline <= new Date()) {
-      showToast("Enter valid batch details and a future safe-use deadline.");
+      showToast("Check the required batch details. The safe-use deadline must be after pickup and in the future. Your entries are preserved; correct invalid fields and resubmit.", "error");
       return;
     }
     mutate(next => {
@@ -387,9 +389,9 @@ export default function App() {
     if (isDuplicateSubmit("rider")) return;
     const phone = riderForm.phone.trim();
     const normalizedPhone = phone.replace(/[\s()-]/g, "");
-    if (!riderForm.name.trim() || !riderForm.zone.trim() || !Number.isInteger(Number(riderForm.capacity)) || Number(riderForm.capacity) <= 0) return showToast("Enter rider name, a positive whole-number capacity and zone.");
-    if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) return showToast("Enter a valid phone number with 10–15 digits, optionally starting with +.");
-    if (data.riders.some(r => (r.phone || "").replace(/[\s()-]/g, "") === normalizedPhone)) return showToast("This phone number is already registered to a rider.");
+    if (!riderForm.name.trim() || !riderForm.zone.trim() || !Number.isInteger(Number(riderForm.capacity)) || Number(riderForm.capacity) <= 0) return showToast("Enter a rider name and zone, and a positive whole-number capacity. Your entries are preserved; correct the fields and resubmit.", "error");
+    if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) return showToast("Enter a valid phone number with 10–15 digits, optionally starting with +. Your entries are preserved.", "error");
+    if (data.riders.some(r => (r.phone || "").replace(/[\s()-]/g, "") === normalizedPhone)) return showToast("This phone number is already registered. Use a different number or update the existing rider. Your entries are preserved.", "error");
     mutate(next => {
       next.riders.push({ id: "R-" + Math.random().toString(36).slice(2, 6).toUpperCase(), name: riderForm.name.trim(), phone: normalizedPhone, capacity: Number(riderForm.capacity), transport: riderForm.transport, zone: riderForm.zone.trim(), status: "available", lastSeenAt: new Date().toISOString() });
       addEvent(next, "Rider added", riderForm.name.trim() + " · " + normalizedPhone + " · capacity " + riderForm.capacity);
@@ -399,7 +401,7 @@ export default function App() {
   const addShelter = (event) => {
     event.preventDefault();
     if (isDuplicateSubmit("shelter")) return;
-    if (!shelterForm.name.trim() || !shelterForm.zone.trim() || Number(shelterForm.demand) < 0) return showToast("Enter a valid receiving site.");
+    if (!shelterForm.name.trim() || !shelterForm.zone.trim() || Number(shelterForm.demand) < 0) return showToast("Enter a site name and zone, and demand as a non-negative whole number. Your entries are preserved.", "error");
     mutate(next => {
       next.shelters.push({ id: "S-" + Math.random().toString(36).slice(2, 6).toUpperCase(), name: shelterForm.name.trim(), zone: shelterForm.zone.trim(), demand: Number(shelterForm.demand), delivered: 0, status: "open", water: shelterForm.water, fuel: shelterForm.fuel, coldStorage: shelterForm.coldStorage, medicalStorage: shelterForm.medicalStorage, accepts: ["prepared", "perishable", "raw", "medical", "infant_formula", "essential"] });
       addEvent(next, "Receiving site registered", shelterForm.name.trim() + " · demand " + shelterForm.demand);
@@ -554,7 +556,7 @@ export default function App() {
       {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
       <div className="breadcrumb"><PageLink to="Overview" onNavigate={navigateTo} className="breadcrumb-home">AidFlow</PageLink><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
     </header><div className="page-wrap">{pageWithRelatedLinks}<footer className="app-footer"><div className="app-footer-main"><div className="app-footer-brand"><span className="app-footer-brand-name"><span className="footer-mark"><AidFlowMark /></span><strong>AidFlow</strong><span className="footer-separator">/</span><span>Civic micro-logistics</span></span><p>Moving surplus food and essential aid with safety-first coordination.</p><span className="app-footer-disclaimer">Prototype demo · Synthetic data · Browser-local state · No live dispatch</span></div><nav className="footer-nav" aria-label="Quick links"><PageLink to="Overview" onNavigate={navigateTo} className="footer-nav-link">Overview</PageLink><PageLink to="Aid batches" onNavigate={navigateTo} className="footer-nav-link">Aid batches</PageLink><PageLink to="Dispatch board" onNavigate={navigateTo} className="footer-nav-link">Dispatch board</PageLink><PageLink to="Reservations" onNavigate={navigateTo} className="footer-nav-link">Reservations</PageLink><PageLink to="Resilience lab" onNavigate={navigateTo} className="footer-nav-link">Resilience lab</PageLink></nav></div><div className="app-footer-bottom"><span>© {new Date().getFullYear()} AidFlow. All rights reserved.</span><span>Built for safer, more accountable civic aid coordination.</span></div></footer></div></main>
-    {toast && <div className="toast-message" role="status" aria-live="polite" aria-atomic="true">{toast}</div>}
+    {toast && <div className={"toast-message " + (toastKind === "error" ? "toast-error" : "")} role={toastKind === "error" ? "alert" : "status"} aria-live={toastKind === "error" ? "assertive" : "polite"} aria-atomic="true">{toast}</div>}
   </div>;
 }
 
