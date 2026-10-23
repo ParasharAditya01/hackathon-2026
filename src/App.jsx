@@ -229,11 +229,14 @@ export default function App() {
   const deliveredCount = data.assignments.filter(a => a.status === "delivered").length;
   const filteredDonations = useMemo(() => data.donations.filter(d => (d.name + " " + d.donor + " " + d.id + " " + d.type).toLowerCase().includes(search.toLowerCase())), [data.donations, search]);
 
-  const confirm = (id) => mutate(next => {
-    const result = confirmReservation(next, id, Date.now());
-    if (!result.ok) addAlert(next, "Reservation confirmation blocked", result.errors.join(" "), "critical");
-    return result;
-  }, "Reservation confirmation checked.");
+  const confirm = (id) => {
+    const result = mutate(next => {
+      const outcome = confirmReservation(next, id, Date.now());
+      if (!outcome.ok) addAlert(next, "Reservation confirmation blocked", outcome.errors.join(" "), "critical");
+      return outcome;
+    });
+    showToast(result?.ok ? "Reservation confirmed. Pickup can now be recorded." : (result?.errors?.[0] || "Reservation confirmation blocked."));
+  };
   const moveAssignment = (id, nextStatus) => {
     const result = mutate(next => {
       const moved = transitionAssignment(next, id, nextStatus, Date.now());
