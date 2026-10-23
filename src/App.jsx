@@ -191,6 +191,7 @@ export default function App() {
   const mobileMenuButtonRef = useRef(null);
   const mobileNavRef = useRef(null);
   const lastAllocationSubmitAt = useRef(0);
+  const lastFormSubmitAt = useRef({});
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState("");
   const [search, setSearch] = useState("");
@@ -213,7 +214,16 @@ export default function App() {
   const showToast = (message) => {
     setToast(message);
     window.clearTimeout(showToast.timer);
-    showToast.timer = window.setTimeout(() => setToast(""), 3200);
+    showToast.timer = window.setTimeout(() => setToast(""), 4200);
+  };
+  const isDuplicateSubmit = (formName) => {
+    const submittedAt = Date.now();
+    if (submittedAt - (lastFormSubmitAt.current[formName] || 0) < 700) {
+      showToast("This form was just submitted. Please wait before trying again.");
+      return true;
+    }
+    lastFormSubmitAt.current[formName] = submittedAt;
+    return false;
   };
 
   useEffect(() => {
@@ -338,6 +348,7 @@ export default function App() {
   };
   const submitAllocation = (event) => {
     event.preventDefault();
+    if (isDuplicateSubmit("allocation")) return;
     const submittedAt = Date.now();
     if (submittedAt - lastAllocationSubmitAt.current < 500) {
       showToast("Allocation already submitted. Wait briefly before running another plan.");
@@ -356,6 +367,7 @@ export default function App() {
   };
   const addBatch = (event) => {
     event.preventDefault();
+    if (isDuplicateSubmit("batch")) return;
     const quantity = Number(batchForm.quantity);
     const pickupAt = new Date(batchForm.pickupAt);
     const deadline = new Date(batchForm.deadline);
@@ -372,6 +384,7 @@ export default function App() {
   };
   const addRider = (event) => {
     event.preventDefault();
+    if (isDuplicateSubmit("rider")) return;
     const phone = riderForm.phone.trim();
     const normalizedPhone = phone.replace(/[\s()-]/g, "");
     if (!riderForm.name.trim() || !riderForm.zone.trim() || !Number.isInteger(Number(riderForm.capacity)) || Number(riderForm.capacity) <= 0) return showToast("Enter rider name, a positive whole-number capacity and zone.");
@@ -385,6 +398,7 @@ export default function App() {
   };
   const addShelter = (event) => {
     event.preventDefault();
+    if (isDuplicateSubmit("shelter")) return;
     if (!shelterForm.name.trim() || !shelterForm.zone.trim() || Number(shelterForm.demand) < 0) return showToast("Enter a valid receiving site.");
     mutate(next => {
       next.shelters.push({ id: "S-" + Math.random().toString(36).slice(2, 6).toUpperCase(), name: shelterForm.name.trim(), zone: shelterForm.zone.trim(), demand: Number(shelterForm.demand), delivered: 0, status: "open", water: shelterForm.water, fuel: shelterForm.fuel, coldStorage: shelterForm.coldStorage, medicalStorage: shelterForm.medicalStorage, accepts: ["prepared", "perishable", "raw", "medical", "infant_formula", "essential"] });
@@ -446,7 +460,7 @@ export default function App() {
         addAlert(next, "Incoming cargo needs a new destination", site.name + " no longer has enough uncommitted demand for " + a.id + ".", "critical");
       }
     });
-  }, "Direct drop-off recorded; affected cargo requires recovery.");
+  }, "Direct drop-off recorded. Review any recovery alerts for affected cargo.");
 
   const renderOverview = () => <div className="page-content">
     <section className="page-heading"><div><p className="eyebrow">CIVIC AID NETWORK <span className="eyebrow-line" /></p><h1>Operations overview</h1><p className="page-subtitle">Coordinate urgent surplus. Protect every handover.</p></div><div className="date-stamp"><Clock3 size={15} /><span>Simulation clock · {shortTime(now)}</span></div></section>
@@ -540,7 +554,7 @@ export default function App() {
       {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
       <div className="breadcrumb"><PageLink to="Overview" onNavigate={navigateTo} className="breadcrumb-home">AidFlow</PageLink><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
     </header><div className="page-wrap">{pageWithRelatedLinks}<footer className="app-footer"><div className="app-footer-main"><div className="app-footer-brand"><span className="app-footer-brand-name"><span className="footer-mark"><AidFlowMark /></span><strong>AidFlow</strong><span className="footer-separator">/</span><span>Civic micro-logistics</span></span><p>Moving surplus food and essential aid with safety-first coordination.</p><span className="app-footer-disclaimer">Prototype demo · Synthetic data · Browser-local state · No live dispatch</span></div><nav className="footer-nav" aria-label="Quick links"><PageLink to="Overview" onNavigate={navigateTo} className="footer-nav-link">Overview</PageLink><PageLink to="Aid batches" onNavigate={navigateTo} className="footer-nav-link">Aid batches</PageLink><PageLink to="Dispatch board" onNavigate={navigateTo} className="footer-nav-link">Dispatch board</PageLink><PageLink to="Reservations" onNavigate={navigateTo} className="footer-nav-link">Reservations</PageLink><PageLink to="Resilience lab" onNavigate={navigateTo} className="footer-nav-link">Resilience lab</PageLink></nav></div><div className="app-footer-bottom"><span>© {new Date().getFullYear()} AidFlow. All rights reserved.</span><span>Built for safer, more accountable civic aid coordination.</span></div></footer></div></main>
-    {toast && <div className="toast-message" role="status" aria-live="polite">{toast}</div>}
+    {toast && <div className="toast-message" role="status" aria-live="polite" aria-atomic="true">{toast}</div>}
   </div>;
 }
 
