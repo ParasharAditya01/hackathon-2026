@@ -78,14 +78,14 @@ export default function App() {
     addEvent("Batch split across riders",`${used} units reserved across ${created.length} assignment(s); ${result.remaining} remain unallocated.`);announce(`Created ${created.length} assignment(s), allocating ${used} units. ${result.remaining} remain.`);
   }
   function timeoutReservations() {
-    const before=assignments.filter(a=>a.state==="reserved").length;
-    if(!before){announce("No active reservations to release.");return;}
-    const released=assignments.map(a=>a.state==="reserved"?{...a,state:"released",reason:"Demo timeout: rider unresponsive; reservation released"}:a);
-    const freed=released.filter(a=>a.state==="released"&&assignments.some(old=>old.id===a.id&&old.state==="reserved"));
-    setAssignments(released);
+    const now=Date.now();
+    const expired=releaseExpiredReservations(assignments.map(a=>a.state==="reserved"?{...a,expiresAt:new Date(now-1000).toISOString()}:a),now);
+    const freed=expired.filter(a=>a.state==="released"&&assignments.some(old=>old.id===a.id&&old.state==="reserved"));
+    if(!freed.length){announce("No active reservations to release.");return;}
+    setAssignments(expired);
     setBatches(prev=>prev.map(b=>({...b,remaining:Math.min(b.quantity,b.remaining+freed.filter(a=>a.batchId===b.id).reduce((n,a)=>n+a.quantity,0)),status:"available"})));
     const ids=new Set(freed.map(a=>a.riderId));setRiders(prev=>prev.map(r=>ids.has(r.id)?{...r,status:"available"}:r));
-    addEvent("Reservation timeout simulated",`${freed.length} unconfirmed reservation(s) released; stock and riders returned to the pool.`,"warning");announce(`Released ${freed.length} reservation(s). Capacity is available again.`);
+    addEvent("Reservation timeout simulated",`${freed.length} unconfirmed reservation(s) expired; stock and riders returned to the pool.`,"warning");announce(`Expired ${freed.length} reservation(s). Capacity is available again.`);
   }
   function sendInTransit(id) {
     setAssignments(prev=>prev.map(a=>a.id===id?{...a,state:"in_transit"}:a));
