@@ -373,6 +373,28 @@ export function runScenario(state, scenarioKey, now = Date.now()) {
       expireReservations(state, now);
       lines.push("Volunteer went unresponsive for 30 minutes. The five-minute reservation expired and released 10 units exactly once.");
     } else lines.push("No eligible reservation could be created; no stock was changed.");
+  } else if (scenarioKey === "closure") {
+    const d = state.donations.find(x => x.id === "B-180");
+    const r = state.riders.find(x => x.status === "available" && x.capacity >= 40);
+    const s = state.shelters.find(x => x.id === "S-A");
+    if (d && r && s) {
+      const created = createReservation(state, { donationId: d.id, riderId: r.id, shelterId: s.id, quantity: 40, travelMinutes: 10, safetyBufferMinutes: 10 }, now);
+      const confirmed = created.ok && confirmReservation(state, created.reservation.id, now);
+      const assignment = confirmed?.ok ? confirmed.assignment : null;
+      const pickup = assignment && transitionAssignment(state, assignment.id, "picked_up", now);
+      const transit = pickup?.ok && transitionAssignment(state, assignment.id, "in_transit", now);
+      if (transit?.ok) {
+        const recovery = closeShelterAndRecover(state, assignment.id, now);
+        lines.push("A rider is already carrying 40 meals when Shelter A suddenly closes.");
+        lines.push("Cargo remains in picked inventory and the assignment enters reroute review.");
+        lines.push("Safe alternate destinations: " + ((recovery.alternatives || []).map(x => x.name).join(", ") || "none; assignment must be escalated") + ".");
+        if (!recovery.alternatives?.length) {
+          assignment.status = "escalated";
+          assignment.history.push("escalated");
+          addAlert(state, "No safe reroute available", assignment.id + " has no compatible open destination with enough demand and time remaining.", "critical", now);
+        }
+      } else lines.push("Could not create a feasible in-transit assignment for the closure simulation.");
+    } else lines.push("Seed data is missing the batch, rider, or Shelter A.");
   } else if (scenarioKey === "direct-drop") {
     const d = state.donations.find(x => x.id === "B-180");
     const r = state.riders.find(x => x.status === "available" && x.capacity >= 40);
@@ -400,7 +422,7 @@ export function runScenario(state, scenarioKey, now = Date.now()) {
       lines.push("Decision: " + (errors.length ? "BLOCKED — " + errors.join(" ") : "eligible under current records."));
     }
   }
-  state.scenarioLog.unshift({ id: id("SC"), title: ({ expiry: "Urgent expiry", split: "180-unit split delivery", ghost: "Ghost reservation", "direct-drop": "Shelter demand filled in transit", resources: "Missing cooking resources" })[scenarioKey] || scenarioKey, at: new Date(now).toISOString(), lines });
+  state.scenarioLog.unshift({ id: id("SC"), title: ({ expiry: "Urgent expiry", split: "180-unit split delivery", ghost: "Ghost reservation", "direct-drop": "Shelter demand filled in transit", closure: "Shelter closure in transit", resources: "Missing cooking resources" })[scenarioKey] || scenarioKey, at: new Date(now).toISOString(), lines });
   addEvent(state, "Scenario executed", scenarioKey, "info", now);
   return lines;
 }
