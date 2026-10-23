@@ -165,7 +165,7 @@ try {
     throw new Error("The footer workspace CTA did not open Overview.");
   }
   await footerEntryPage.close();
-  await page.getByRole("button", { name: /Enter operations/ }).click();
+  await page.locator("header").getByRole("button", { name: "Enter operations" }).click();
   await page.locator(".page-content").waitFor();
   console.log("PASS landing-page CTAs · workspace and resilience destinations");
 
