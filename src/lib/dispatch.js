@@ -289,7 +289,7 @@ export function transitionAssignment(state, assignmentId, next, now = Date.now()
   }
   if (next === "delivered") {
     if (!d || !s || s.status === "closed") return { ok: false, errors: ["Destination is closed or missing; route to recovery instead."] };
-    if (remainingMinutes(a.deadline, now) < 0) return { ok: false, errors: ["Safe-use deadline has passed; delivery cannot be marked safe."] };
+    if (new Date(a.deadline).getTime() <= now) return { ok: false, errors: ["Safe-use deadline has passed; delivery cannot be marked safe."] };
     const incompatibility = [];
     if (!s.accepts.includes(d.type)) incompatibility.push("site does not accept this aid type");
     if (["raw", "infant_formula"].includes(d.type) && (!s.water || !s.fuel)) incompatibility.push("clean water and cooking fuel are missing");
@@ -304,6 +304,7 @@ export function transitionAssignment(state, assignmentId, next, now = Date.now()
     a.completedAt = new Date(now).toISOString();
     if (res) res.status = "delivered";
   }
+  if (next === "in_transit" && remainingMinutes(a.deadline, now) <= a.travelMinutes + a.safetyBufferMinutes) return { ok: false, errors: ["Route cannot start: remaining safe-use time is below travel time plus safety buffer."] };
   if (next === "failed") {
     if (a.status === "picked_up" || a.status === "in_transit" || a.status === "reroute_required") {
       addAlert(state, "Cargo needs disposition", a.id + " failed while carrying " + a.quantity + " units. Do not return it to available inventory.", "critical", now);
