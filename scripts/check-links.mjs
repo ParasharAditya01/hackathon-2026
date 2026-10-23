@@ -119,6 +119,7 @@ try {
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.goto(baseURL, { waitUntil: "networkidle" });
+  console.log("DEBUG initial browser render", JSON.stringify(await page.evaluate(() => ({ url: location.href, body: document.body.innerText.slice(0, 300), root: document.getElementById("root")?.innerHTML.slice(0, 300) }))), JSON.stringify(pageErrors));
 
   let externalAnchors = await auditAnchors(page, "landing page");
   const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
