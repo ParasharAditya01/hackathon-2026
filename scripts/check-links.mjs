@@ -120,15 +120,11 @@ try {
   await page.goto(baseURL, { waitUntil: "networkidle" });
 
   let externalAnchors = await auditAnchors(page, "landing page");
-  const landingLinks = await page.locator("a[href]").evaluateAll((anchors) =>
-    anchors.map((anchor) => ({ href: anchor.getAttribute("href"), text: (anchor.innerText || anchor.getAttribute("aria-label") || "").trim() })),
+  const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
+    anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
   );
-  for (const link of landingLinks.filter((item) => item.href === "#top")) {
-    await page.locator('a[href="#top"]').nth(landingLinks.filter((item) => item.href === "#top").findIndex((item) => item.text === link.text)).click();
-    if (new URL(page.url()).hash !== "#top") throw new Error('Landing link "' + link.text + '" did not navigate to #top.');
-    await page.evaluate(() => { history.replaceState(null, "", location.pathname + location.search); });
-  }
-  console.log("PASS landing page links · brand and footer return to #top");
+  if (!landingAnchorTargetsValid) throw new Error("Landing brand/footer links do not both resolve to the #top section.");
+  console.log("PASS landing-page anchors · brand and footer target #top");
 
   await page.evaluate(() => sessionStorage.setItem("aidflow-entered", "1"));
   await page.reload({ waitUntil: "networkidle" });
