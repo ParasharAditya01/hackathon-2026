@@ -197,7 +197,7 @@ try {
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Drawer close button did not close navigation");
       await menuButton.click();
-      await page.locator(".mobile-nav-backdrop").click({ position: { x: 10, y: 10 } });
+      await page.locator(".mobile-nav-backdrop").click({ position: { x: viewport.width - 10, y: 10 } });
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Backdrop did not close navigation");
       await navigateToSection(page, "Aid batches", true);
