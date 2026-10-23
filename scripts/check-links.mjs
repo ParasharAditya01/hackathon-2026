@@ -130,7 +130,8 @@ try {
   }
   console.log("PASS landing page links · brand and footer return to #top");
 
-  await page.getByRole("button", { name: /Open operations workspace/i }).click();
+  await page.reload({ waitUntil: "networkidle" });
+  await page.locator(".landing-nav-cta").click();
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
   const brand = page.locator(".sidebar .brand");
