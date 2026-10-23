@@ -128,7 +128,18 @@ try {
     anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
   );
   if (!landingAnchorTargetsValid) throw new Error("Landing brand/footer links do not both resolve to the #top section.");
-  console.log("PASS landing-page anchors · brand and footer target #top");
+  const landingBrand = page.getByRole("link", { name: "AidFlow home" }).first();
+  const landingLogoStyle = await landingBrand.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const mark = element.querySelector(".landing-mark");
+    const markRect = mark.getBoundingClientRect();
+    return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height, foreground: getComputedStyle(element).color, background: getComputedStyle(element.closest(".landing-nav")).backgroundColor };
+  });
+  if (landingLogoStyle.width <= 0 || landingLogoStyle.height <= 0 || Math.abs(landingLogoStyle.markWidth - landingLogoStyle.markHeight) > 0.5) throw new Error("Landing logo dimensions or aspect ratio are invalid: " + JSON.stringify(landingLogoStyle));
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await landingBrand.click();
+  await page.waitForFunction(() => window.scrollY === 0);
+  console.log("PASS landing-page logo · accessible name, #top destination, square mark, legible theme colors");
 
   await page.evaluate(() => sessionStorage.setItem("aidflow-entered", "1"));
   await page.reload({ waitUntil: "networkidle" });
