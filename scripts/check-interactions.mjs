@@ -103,7 +103,7 @@ async function confirmAndPickup(page) {
   const claim = page.getByRole("button", { name: /Confirm claim/ }).first();
   await claim.waitFor();
   await claim.click();
-  await page.getByText("Reservation confirmation checked.").waitFor();
+  await page.getByText("Reservation confirmed. Pickup can now be recorded.").waitFor();
   await navigate(page, "Dispatch board");
   await page.getByRole("button", { name: /Confirm pickup/ }).first().click();
   await page.getByRole("button", { name: /Start transit/ }).first().waitFor();
@@ -235,7 +235,7 @@ try {
   // Allocation must create reservations once; reservation and assignment buttons advance real state.
   const allocationCard = await createAllocation(page, 40, true);
   await allocationCard.getByRole("button", { name: /Confirm claim/ }).click();
-  await page.getByText("Reservation confirmation checked.").waitFor();
+  await page.getByText("Reservation confirmed. Pickup can now be recorded.").waitFor();
   await navigate(page, "Dispatch board");
   await page.getByRole("button", { name: /Confirm pickup/ }).first().click();
   await page.getByRole("button", { name: /Start transit/ }).first().waitFor();
