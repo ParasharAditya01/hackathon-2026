@@ -124,6 +124,41 @@ try {
   await page.goto(baseURL, { waitUntil: "networkidle" });
   await page.locator(".landing-page").waitFor({ timeout: 10000 });
 
+  const faviconLinks = await page.locator('link[rel~="icon"], link[rel="apple-touch-icon"]').evaluateAll((links) =>
+    links.map((link) => ({ rel: link.rel, type: link.type, sizes: link.sizes, href: link.getAttribute("href") })),
+  );
+  const expectedFavicons = [
+    ["/favicon.svg", "image/svg+xml"],
+    ["/favicon-32x32.png", "image/png"],
+    ["/favicon-16x16.png", "image/png"],
+    ["/favicon.ico", ""],
+    ["/apple-touch-icon.png", "image/png"],
+  ];
+  for (const [path, type] of expectedFavicons) {
+    const link = faviconLinks.find((item) => item.href === path);
+    if (!link) throw new Error("Missing favicon HTML reference: " + path);
+    if (type && link.type !== type) throw new Error("Incorrect favicon MIME type for " + path + ": " + link.type);
+    const response = await context.request.get(baseURL + path);
+    if (!response.ok()) throw new Error("Favicon asset failed to load: " + path + " · HTTP " + response.status());
+    const body = await response.body();
+    if (!body.length) throw new Error("Favicon asset is empty: " + path);
+    if (path.endsWith(".png")) {
+      const dimensions = await page.evaluate(async (url) => {
+        const response = await fetch(url);
+        const bitmap = await createImageBitmap(await response.blob());
+        const result = { width: bitmap.width, height: bitmap.height };
+        bitmap.close();
+        return result;
+      }, path);
+      const expectedSize = path.includes("16x16") ? 16 : path.includes("32x32") ? 32 : 180;
+      if (dimensions.width !== expectedSize || dimensions.height !== expectedSize) {
+        throw new Error("Incorrect favicon dimensions for " + path + ": " + JSON.stringify(dimensions));
+      }
+    }
+    if (path.endsWith(".svg") && !body.toString("utf8").includes("<svg")) throw new Error("SVG favicon is not valid SVG markup.");
+    console.log("PASS favicon asset · " + path + " · HTTP " + response.status() + (path.endsWith(".png") ? " · " + (path.includes("16x16") ? "16x16" : path.includes("32x32") ? "32x32" : "180x180") : ""));
+  }
+
   let externalAnchors = await auditAnchors(page, "landing page");
   const landingAnchorTargetsValid = await page.locator('a[href="#top"]').evaluateAll(anchors =>
     anchors.length === 2 && anchors.every(anchor => document.getElementById(anchor.getAttribute("href").slice(1))),
