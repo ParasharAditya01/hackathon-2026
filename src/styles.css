@@ -1275,3 +1275,53 @@ textarea {
   .app-footer { align-items: flex-start; flex-direction: column; }
   .footer-nav { gap: 4px 12px; }
 }
+
+
+/* Expanded footer with a clear prototype disclosure and dynamic copyright line. */
+.app-footer {
+  margin-top: 28px;
+  padding: 22px 0 14px;
+  border-top: 1px solid var(--line, #E4DCD1);
+  color: var(--muted, #786E67);
+}
+.app-footer-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px 28px;
+  width: 100%;
+}
+.app-footer-brand-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink, #3D1724);
+  font-size: 13px;
+}
+.app-footer-brand-name strong { font-size: 15px; letter-spacing: -0.3px; }
+.app-footer-brand p {
+  margin: 7px 0 4px;
+  max-width: 420px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.app-footer-disclaimer { font-size: 10px; line-height: 1.6; }
+.app-footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 18px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line, #E4DCD1);
+  font-size: 10px;
+  line-height: 1.6;
+}
+@media (max-width: 760px) {
+  .app-footer { margin-top: 22px; padding-top: 18px; }
+  .app-footer-main { flex-direction: column; gap: 10px; }
+  .app-footer-bottom { align-items: flex-start; flex-direction: column; margin-top: 12px; }
+}
