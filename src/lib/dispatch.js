@@ -324,6 +324,21 @@ export function simulateDirectDrop(state, assignmentId, quantity, now = Date.now
   return { ok: true, directDelivered: direct, alternatives: findRerouteOptions(state, a, now) };
 }
 
+export function disposeFailedCargo(state, assignmentId, outcome, now = Date.now()) {
+  const a = state.assignments.find(x => x.id === assignmentId);
+  if (!a || a.status !== "failed" || !["spoiled", "rejected"].includes(outcome)) return { ok: false, errors: ["Cargo is not awaiting a valid final disposition."] };
+  const d = state.donations.find(x => x.id === a.donationId);
+  if (!d || d.picked < a.quantity) return { ok: false, errors: ["Cargo quantity does not reconcile against picked inventory."] };
+  d.picked -= a.quantity;
+  d.rejected += a.quantity;
+  if (outcome === "spoiled") state.spoiledTotal += a.quantity;
+  else state.rejectedTotal += a.quantity;
+  a.status = outcome;
+  a.history.push(outcome);
+  addEvent(state, "Cargo disposition recorded", a.id + " · " + a.quantity + " units marked " + outcome + ".", "warning", now);
+  return { ok: true, assignment: a };
+}
+
 export function runScenario(state, scenarioKey, now = Date.now()) {
   const lines = [];
   if (scenarioKey === "expiry") {
