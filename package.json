@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test src/lib/*.test.js",
-    "test:responsive": "node scripts/check-responsive.mjs"
+    "test:responsive": "node scripts/check-responsive.mjs",
+    "test:links": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
