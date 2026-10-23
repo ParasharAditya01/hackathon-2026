@@ -91,3 +91,23 @@ test("deadline and safety buffer are hard constraints", () => {
   });
   assert.ok(reasons.some(reason => reason.includes("safe-use deadline")));
 });
+
+
+test("confirmed but unpicked claim expires and releases reserved stock", () => {
+  const state = createSeedState();
+  const result = allocateAcrossRiders(state, {
+    donationId: "B-180", quantity: 40, travelMinutes: 10, safetyBufferMinutes: 10
+  });
+  const reservation = result.allocations[0].reservation;
+  const confirmation = confirmReservation(state, reservation.id);
+  assert.equal(confirmation.ok, true);
+  reservation.expiresAt = new Date(Date.now() - 1000).toISOString();
+  assert.equal(expireReservations(state, Date.now()), 1);
+  const batch = state.donations.find(d => d.id === "B-180");
+  assert.equal(confirmation.assignment.status, "cancelled");
+  assert.equal(reservation.status, "expired");
+  assert.equal(batch.available, 180);
+  assert.equal(batch.reserved, 0);
+  assert.equal(batch.picked, 0);
+  assert.equal(expireReservations(state, Date.now()), 0);
+});
