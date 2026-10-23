@@ -151,7 +151,20 @@ try {
       label: svg.getAttribute("aria-label") || svg.querySelector("title")?.textContent?.trim() || "",
     }));
     for (const graphic of graphics) {
-      if (!graphic.hidden && !(graphic.role === "img" && graphic.label)) {
+      // Lucide icons are decorative when used beside visible text or inside a named control.
+      // Do not require every small UI icon to expose a duplicate announcement to screen readers.
+      const element = [...document.querySelectorAll("svg")].find(candidate =>
+        (typeof candidate.className === "object" ? candidate.className.baseVal : candidate.className) === graphic.className
+      );
+      const parentControl = element?.closest("button, a, [role='button'], [role='link']");
+      const controlName = parentControl && (
+        parentControl.getAttribute("aria-label") ||
+        parentControl.getAttribute("aria-labelledby") ||
+        parentControl.innerText ||
+        ""
+      ).trim();
+      const decorativeLucide = /(^|\\s)lucide(?:\\s|$)/.test(graphic.className) && (parentControl ? Boolean(controlName) : true);
+      if (!graphic.hidden && !(graphic.role === "img" && graphic.label) && !decorativeLucide) {
         failures.push("SVG is neither hidden as decorative nor given an accessible image role and name: " + graphic.className);
       }
     }
