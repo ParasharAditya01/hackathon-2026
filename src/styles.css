@@ -36,6 +36,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .brand-copy small { color:var(--taupe); letter-spacing:1.1px; }
 .sidebar { background:var(--deep-wine); border-right-color:#4B2633; color:#F5F0E7; }
 .sidebar .brand-copy strong { color:#FFFCF7; }
+.brand-mark, .landing-mark { flex:0 0 auto; aspect-ratio:1 / 1; }
+.brand-mark .aidflow-mark, .landing-mark .aidflow-mark { width:100%; height:100%; }
 .sidebar .brand-copy small, .sidebar .workspace-label { color:#C9B5B8; }
 .sidebar .nav-item { color:#E6D9D9; opacity:1; border-radius:6px; }
 .sidebar .nav-item.is-active { color:#35121F; background:#F5F0E7; }
@@ -1208,6 +1210,7 @@ textarea {
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 .sidebar .brand:focus-visible {
