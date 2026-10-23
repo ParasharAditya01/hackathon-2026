@@ -191,27 +191,25 @@ try {
   }
   console.log("PASS all eight workspace navigation controls");
 
-  // Batch form: submit, search, no-result state, and clearing the filter.
+  // Batch form and inventory search. CI intentionally has no Turnstile secret or live API:
+  // verify the security gate stays closed, then exercise search against seeded demo inventory.
   await navigate(page, "Aid batches");
   const batchForm = page.locator("form.form-card").first();
   await batchForm.getByLabel("Donor / organization").fill("Interaction Test Kitchen");
   await batchForm.getByLabel("Batch name").fill("Interaction Test Meals");
   await batchForm.getByLabel("Quantity (units)").fill("12");
   await batchForm.getByLabel("Pickup location").fill("Test loading bay");
-  await batchForm.getByRole("button", { name: /Register batch/ }).dblclick();
-  await page.getByText("Interaction Test Meals", { exact: true }).waitFor();
-  await page.getByRole("status").getByText("Aid batch registered.").waitFor();
+  const registerButton = batchForm.getByRole("button", { name: /Register batch/ });
+  if (await registerButton.isEnabled()) {
+    throw new Error("Batch registration must remain disabled in CI without configured Turnstile verification.");
+  }
+  await page.getByText(/security verification/i).waitFor();
   const search = page.getByRole("searchbox", { name: "Search aid batches, donors, or aid type" });
-  await search.fill("Interaction Test Meals");
-  if (await page.locator(".batch-card").count() !== 1) throw new Error("Batch search did not filter to the matching record.");
   await search.fill("no-such-aid-record-xyz");
   await page.getByText("No matching aid batches", { exact: true }).waitFor();
   await search.fill("");
-  if (await page.locator(".batch-card").count() < 2) throw new Error("Clearing batch search did not restore the full inventory list.");
-  if (await page.getByText("Interaction Test Meals", { exact: true }).count() !== 1) {
-    throw new Error("Rapid batch-form submission created duplicate records or lost the new record.");
-  }
-  console.log("PASS batch form and inventory search · record created once, filtering and empty state work");
+  if (await page.locator(".batch-card").count() < 2) throw new Error("Clearing batch search did not restore the seeded inventory list.");
+  console.log("PASS batch security gate and inventory search · unverified submissions blocked; filtering and empty state work");
 
   // Rider form and availability toggle.
   await navigate(page, "Riders");
