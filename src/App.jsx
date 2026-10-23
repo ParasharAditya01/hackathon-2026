@@ -55,7 +55,7 @@ function AidFlowMark({ className = "" }) {
 function LandingPage({ onEnter, onExplore }) {
   return <main className="landing-page">
     <header className="landing-nav">
-      <a href="#top" className="landing-brand" aria-label="AidFlow home"><span className="landing-mark"><AidFlowMark className="logo-intro" /></span><span className="landing-wordmark">AidFlow<span className="landing-wordmark-dot">.</span><small>CIVIC MICRO-LOGISTICS</small></span></a>
+      <a href="#top" className="landing-brand" aria-label="AidFlow home"><span className="landing-mark"><AidFlowMark className="logo-intro" /></span><span className="landing-wordmark"><span>AidFlow<span className="landing-wordmark-dot">.</span></span><small>CIVIC MICRO-LOGISTICS</small></span></a>
       <div className="landing-nav-meta"><span className="landing-status"><span /> SAFETY-FIRST DISPATCH</span><button className="landing-nav-cta" onClick={onEnter}>Enter operations <ArrowRight size={15} /></button></div>
     </header>
     <section className="landing-hero" id="top">
