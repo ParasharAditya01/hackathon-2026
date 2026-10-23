@@ -210,3 +210,209 @@ h1 { color:var(--deep-wine); letter-spacing:-1.1px; }
 @media(prefers-reduced-motion:reduce) {
   .route-map-path, .route-map-time, .logo-intro .logo-route, .logo-intro circle:last-child { animation:none!important; stroke-dashoffset:0!important; }
 }
+
+
+/* Responsive overflow hardening: preserve content and let it wrap rather than clip. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#root,
+.app-shell,
+.main-content,
+.page-wrap,
+.page-content,
+.landing-page,
+.landing-nav,
+.landing-hero,
+.landing-stats,
+.landing-how,
+.landing-footer,
+.surface,
+.two-column,
+.dispatch-columns,
+.form-grid,
+.metrics-grid,
+.principles-grid,
+.scenario-grid,
+.batch-list,
+.rider-list,
+.site-list,
+.assignment-list,
+.event-list {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body {
+  overflow-wrap: anywhere;
+}
+
+img,
+video,
+canvas,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+svg {
+  max-width: 100%;
+}
+
+.page-content :where(p, h1, h2, h3, h4, span, strong, small, label, a, li, code),
+.landing-page :where(p, h1, h2, h3, h4, span, strong, small, label, a, li, code) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.date-stamp,
+.readiness-tag,
+.badge,
+.activity-state,
+.landing-status {
+  white-space: normal;
+}
+
+.landing-page {
+  /* Do not clip content to conceal an overflowing child. */
+  overflow: visible;
+}
+
+.landing-nav,
+.landing-nav-meta,
+.landing-footer {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.route-illustration,
+.route-map-svg {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.urgent-copy > strong,
+.assignment-route strong {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.toast-message {
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: max-content;
+  max-width: calc(100% - 24px);
+}
+
+@media (max-width: 760px) {
+  .primary-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .nav-item {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 6px 7px;
+    gap: 6px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .nav-item > span:not(.nav-count) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .nav-count {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .main-content,
+  .page-wrap {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-wrap {
+    padding-right: clamp(12px, 4vw, 16px);
+    padding-left: clamp(12px, 4vw, 16px);
+  }
+
+  .landing-nav {
+    gap: 12px;
+  }
+
+  .landing-nav-meta {
+    justify-content: flex-end;
+  }
+
+  .landing-stats,
+  .landing-how {
+    min-width: 0;
+  }
+
+  .landing-stats > div {
+    min-width: 0;
+  }
+
+  .assignment-route,
+  .urgent-row,
+  .audit-row {
+    min-width: 0;
+  }
+
+  .site-actions > *,
+  .assignment-controls > *,
+  .reroute-controls > *,
+  .reservation-actions > * {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-nav {
+    align-items: flex-start;
+  }
+
+  .landing-nav-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .landing-footer {
+    align-items: flex-start;
+  }
+
+  .surface {
+    padding: 12px;
+  }
+
+  .assignment-route {
+    grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr);
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .assignment-route > svg {
+    max-width: 10px;
+  }
+
+  .urgent-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 8px;
+  }
+}
