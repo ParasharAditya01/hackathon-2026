@@ -240,7 +240,7 @@ try {
 
   // Open alerts are actionable and disappear from the unresolved action queue when resolved.
   await navigate(page, "Alerts & audit");
-  const openAlert = page.locator(".event-row").filter({ has: page.getByRole("button", { name: "Resolve" }) }).first();
+  const openAlert = page.locator(".event-row").filter({ hasText: "Destination demand changed" }).first();
   if (await openAlert.count()) {
     await openAlert.getByRole("button", { name: "Resolve" }).click();
     await page.getByText("Alert marked reviewed.").waitFor();
