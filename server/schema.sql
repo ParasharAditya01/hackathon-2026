@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS aid_batches (
 CREATE TABLE IF NOT EXISTS riders (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  phone TEXT,
   capacity INTEGER NOT NULL CHECK (capacity > 0),
   transport TEXT NOT NULL,
   zone TEXT NOT NULL,
@@ -50,6 +51,10 @@ CREATE TABLE IF NOT EXISTS riders (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Also upgrade databases created before rider phone numbers were introduced.
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS phone TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS riders_phone_unique_idx ON riders(phone) WHERE phone IS NOT NULL AND phone <> '';
 
 CREATE TABLE IF NOT EXISTS receiving_sites (
   id TEXT PRIMARY KEY,
