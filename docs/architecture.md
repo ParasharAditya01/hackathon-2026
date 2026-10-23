@@ -1,50 +1,56 @@
 # AidFlow Architecture
 
 ## Product boundary
-AidFlow coordinates donors, volunteer riders, receiving shelters, and an operations coordinator. The current build is a client-side hackathon simulation with synthetic seed data.
+AidFlow coordinates donors, volunteer riders, receiving shelters, and an operations coordinator.
 
-## Current modules
-- `src/App.jsx`: dashboard, batch registration, dispatch controls, assignment lifecycle, failure injection, and activity feed.
-- `src/lib/dispatch.js`: pure safety checks, capacity-aware split allocation, reservation expiry transition, and reroute eligibility.
-- `src/lib/dispatch.test.js`: Node built-in tests for core invariants.
-- `src/styles.css`: responsive operations interface.
-- `docs/architecture.md`: this document.
+## Proposed modules
+```text
+src/
+  components/       Shared presentational components
+  features/
+    donations/      Batch registration and remaining quantity
+    dispatch/       Eligibility filtering, ranking, allocation
+    reservations/   Claim deadlines and release/reassignment
+    shelters/       Demand, status, compatibility requirements
+    simulation/     Deterministic failure scenarios for judging
+  lib/              Time, validation, domain utilities
+  App.jsx
+  main.jsx
+  styles.css
+docs/architecture.md
+```
+
+Persistence and realtime transport will be selected after the OmniRush environment is verified. Domain rules must remain independent of UI components so they can be enforced authoritatively by a backend.
 
 ## Core records
-- **DonationBatch**: id, donor, aidType, quantity, remaining, pickup, safe-use deadline, handling requirements, status.
-- **Rider**: id, status, capacity, last-seen label.
-- **Shelter**: id, status, open demand by aid type, resources.
-- **Assignment**: id, batchId, riderId, shelterId, quantity, state, reservation expiry, estimated arrival.
-- **Event**: id, timestamp, title, detail, severity.
+- **DonationBatch**: id, donor, aidType, quantity, remainingQuantity, pickup window, safeUseDeadline, handling requirements, status.
+- **Rider**: id, status, capacity, current location, lastSeenAt, handling capabilities.
+- **Shelter**: id, status, openDemand by aid type, location, resource prerequisites.
+- **Assignment**: id, batchId, riderId, shelterId, quantity, state, reservationExpiresAt, estimatedArrivalAt, safetyMargin.
+- **Event**: id, entity references, event type, timestamp, actor, reason.
 
-## Implemented dispatch rules
-1. Quantity must be positive and cannot exceed remaining batch stock, rider capacity, or open shelter demand.
-2. Estimated arrival must fit before the batch deadline with a 10-minute safety buffer.
-3. Shelter prerequisites are hard constraints. Ration kits require clean water and cooking fuel in the current demo model.
-4. Split allocation never assigns one rider more than once in the same allocation pass.
-5. Active reservations and in-transit assignments hold shelter demand so later allocations cannot oversubscribe it.
-6. Unconfirmed reservation timeout releases stock, held demand, and rider availability in the simulation.
-7. At delivery time, site status, remaining demand, and food deadline are rechecked.
-8. If the receiving site closes, attempt rerouting to an open, compatible site with unreserved demand; otherwise escalate visibly.
-9. A delivery or reroute is not presented as a production-verified real-world outcome.
+## Non-negotiable invariants
+1. Never allocate a non-positive quantity.
+2. Total allocation must not exceed available batch quantity, rider remaining capacity, or shelter open demand.
+3. An unconfirmed reservation expires and releases capacity idempotently.
+4. A batch is not dispatchable if expired or unable to arrive before its safe-use deadline with the required margin.
+5. Shelter status, demand, and prerequisites are rechecked before pickup and delivery.
+6. Rerouting is permitted only to a compatible destination with open demand and feasible arrival time.
+7. If no safe recovery exists, escalate visibly. Never silently mark aid delivered.
+8. Concurrent claims must be serialized or applied atomically by the authoritative backend.
+9. Every state transition records an auditable reason.
+10. Medical supplies need item-specific constraints; food rules must not be reused blindly.
 
-## Important architecture gap
-These rules currently execute in the browser against in-memory state. They are not secure or authoritative against concurrent users or a malicious client. Before production, move validation and state transitions into a backend transaction, add authentication/authorization, persist an append-only audit trail, and use server time for reservation deadlines. Realtime subscriptions and external routing should be added only after the backend invariants are enforced.
+## Dispatch strategy
+Apply hard eligibility filters first: batch status/deadline, rider availability/capacity, destination status/demand, resource compatibility, and estimated arrival. Rank only eligible candidates by urgency, arrival time, capacity fit, and demand fit. Ranking never overrides safety.
 
-## Test and run
-- `npm install`
-- `npm test`
-- `npm run build`
-- `npm run dev`
+## Five-hour build order
+1. Foundation and navigation shell.
+2. Domain model and pure validation helpers.
+3. Demo seed data and operations dashboard.
+4. Reservation lifecycle and capacity-aware splitting.
+5. Failure simulation: timeout, demand closure in transit, direct shelter donation.
+6. Verification, responsive polish, demo freeze.
 
-The tests use Node's built-in test runner. A CI workflow should run tests and production builds on pushes.
-
-## Five-hour delivery sequence
-1. Foundation and interface shell.
-2. Domain rules and test harness.
-3. Demo inventory, rider/shelter state, and dispatch allocation.
-4. Timeout recovery and in-transit shelter closure scenario.
-5. Test execution, responsive review, and demo rehearsal.
-
-## Demo limitations
-All records and travel estimates are synthetic. The app uses local browser state and resets on refresh. No authenticated backend, durable database, real-time multi-user synchronization, live GPS, or live map routing is connected. It is not certified for real food-safety or medical-supply decisions.
+## Demo disclaimer
+Simulation values are synthetic. Travel time is not live navigation. The prototype must make assumptions visible and must not imply production-grade safety certification.
