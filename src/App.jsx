@@ -189,6 +189,10 @@ export default function App() {
     site.status = status;
     addEvent(next, "Receiving site status changed", site.name + " → " + status, status === "closed" ? "warning" : "info");
     if (status === "closed") {
+      next.assignments.filter(a => a.shelterId === siteId && a.status === "accepted").forEach(a => {
+        const cancelled = transitionAssignment(next, a.id, "cancelled", Date.now());
+        if (cancelled.ok) addAlert(next, "Unpicked claim released", site.name + " closed before " + a.id + " pickup; reserved stock was returned safely.", "warning");
+      });
       next.assignments.filter(a => a.shelterId === siteId && ["picked_up", "in_transit"].includes(a.status)).forEach(a => {
         a.status = "reroute_required";
         a.history.push("reroute_required");
@@ -217,14 +221,22 @@ export default function App() {
     site.delivered += amount;
     next.deliveredTotal += amount;
     addEvent(next, "Direct community drop-off", amount + " units delivered directly to " + site.name + ".", "warning");
-    if (site.delivered >= site.demand) {
-      site.status = "limited";
-      next.assignments.filter(a => a.shelterId === siteId && ["picked_up", "in_transit"].includes(a.status)).forEach(a => {
+    if (site.delivered >= site.demand) site.status = "limited";
+    let remainingDemand = Math.max(0, site.demand - site.delivered);
+    next.assignments.filter(a => a.shelterId === siteId && ["accepted", "picked_up", "in_transit"].includes(a.status)).sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(a => {
+      if (remainingDemand >= a.quantity) {
+        remainingDemand -= a.quantity;
+        return;
+      }
+      if (a.status === "accepted") {
+        const cancelled = transitionAssignment(next, a.id, "cancelled", Date.now());
+        if (cancelled.ok) addAlert(next, "Unpicked claim released", site.name + " demand changed before " + a.id + " pickup; reserved stock was returned safely.", "warning");
+      } else {
         a.status = "reroute_required";
-        a.history.push("destination_demand_filled");
-        addAlert(next, "Incoming cargo needs a new destination", site.name + " demand filled while " + a.id + " was in transit.", "critical");
-      });
-    }
+        a.history.push("destination_demand_reduced");
+        addAlert(next, "Incoming cargo needs a new destination", site.name + " no longer has enough uncommitted demand for " + a.id + ".", "critical");
+      }
+    });
   }, "Direct drop-off recorded; affected cargo requires recovery.");
 
   const renderOverview = () => <div className="page-content">
