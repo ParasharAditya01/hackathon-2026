@@ -1389,3 +1389,5 @@ img, video { block-size: auto; }
 .not-found-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:16px;border-top:1px solid var(--line,#DED4C8);color:var(--muted,#8D8179);font-size:11px}
 .not-found-page a:focus-visible,.not-found-page button:focus-visible{outline:3px solid #B69A78;outline-offset:3px}
 @media(max-width:520px){.not-found-page{padding:22px}.not-found-content{padding:56px 0}.not-found-actions{align-items:stretch;flex-direction:column}.not-found-primary,.not-found-secondary{width:100%}.not-found-links{gap:12px 16px}.not-found-footer{flex-direction:column}}
+
+.not-found-section-link{display:inline-flex;align-items:center;gap:6px;padding:4px 0;color:var(--oxblood,#641F32);font-size:12px;font-weight:750;text-decoration:none}.not-found-section-link:hover{text-decoration:underline;text-underline-offset:4px}
