@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  allocateAcrossRiders, confirmReservation, createSeedState, expireReservations,
-  runScenario, shelterRemaining, transitionAssignment, validateFeasibility
+  allocateAcrossRiders, confirmReservation, createSeedState, disposeFailedCargo,
+  expireAidBatches, expireReservations, runScenario, shelterRemaining,
+  transitionAssignment, validateFeasibility
 } from "./dispatch.js";
 
 test("180-unit split never exceeds 40-unit rider capacity or site demand", () => {
