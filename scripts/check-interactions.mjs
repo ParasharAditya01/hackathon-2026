@@ -29,6 +29,31 @@ async function waitForServer() {
   throw new Error("Vite server did not become ready for interaction checks.");
 }
 
+async function auditControlSemantics(page, contextName) {
+  const result = await page.evaluate(() => {
+    const visible = element => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== "hidden";
+    const unnamedButtons = [...document.querySelectorAll("button")].filter(visible).filter(button =>
+      !(button.getAttribute("aria-label") || button.getAttribute("aria-labelledby") || button.innerText || "").trim()
+    ).map(button => button.outerHTML.slice(0, 180));
+    const unlabeledFields = [...document.querySelectorAll("input, select, textarea")].filter(visible).filter(field => {
+      if (field.type === "hidden" || field.getAttribute("aria-hidden") === "true") return false;
+      return !(field.getAttribute("aria-label") || field.getAttribute("aria-labelledby") || (field.labels && field.labels.length));
+    }).map(field => field.outerHTML.slice(0, 180));
+    const misleadingPointerTargets = [...document.querySelectorAll("body *")].filter(visible).filter(element => {
+      if (getComputedStyle(element).cursor !== "pointer") return false;
+      return !element.closest("button, a, input, select, textarea, label, summary, [role='button'], [role='link']");
+    }).map(element => ({
+      tag: element.tagName.toLowerCase(),
+      className: typeof element.className === "string" ? element.className : "",
+      text: (element.innerText || "").trim().slice(0, 60),
+    }));
+    return { unnamedButtons, unlabeledFields, misleadingPointerTargets };
+  });
+  if (result.unnamedButtons.length) throw new Error(contextName + " has buttons without accessible names: " + JSON.stringify(result.unnamedButtons));
+  if (result.unlabeledFields.length) throw new Error(contextName + " has form controls without accessible labels: " + JSON.stringify(result.unlabeledFields));
+  if (result.misleadingPointerTargets.length) throw new Error(contextName + " styles non-interactive elements as clickable: " + JSON.stringify(result.misleadingPointerTargets));
+}
+
 async function navigate(page, section) {
   await page.locator(".nav-item").filter({ hasText: section }).click();
   await page.locator(".page-content").waitFor();
@@ -140,7 +165,10 @@ try {
   await navigate(page, "Overview");
 
   // Every navigation control must show the correct page.
-  for (const section of sections) await navigate(page, section);
+  for (const section of sections) {
+    await navigate(page, section);
+    await auditControlSemantics(page, section);
+  }
   console.log("PASS all eight workspace navigation controls");
 
   // Batch form: submit, search, no-result state, and clearing the filter.
