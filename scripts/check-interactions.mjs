@@ -203,7 +203,7 @@ try {
   if (await registerButton.isEnabled()) {
     throw new Error("Batch registration must remain disabled in CI without configured Turnstile verification.");
   }
-  await page.getByText(/security verification/i).waitFor();
+  await page.getByText(/bot protection is not configured|security verification/i).waitFor();
   const search = page.getByRole("searchbox", { name: "Search aid batches, donors, or aid type" });
   await search.fill("no-such-aid-record-xyz");
   await page.getByText("No matching aid batches", { exact: true }).waitFor();
