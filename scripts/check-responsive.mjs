@@ -179,7 +179,7 @@ try {
 
     const mobile = viewport.width <= 760;
     if (mobile) {
-      const menuButton = page.getByRole("button", { name: "Open navigation menu" });
+      const menuButton = page.locator(".mobile-menu-toggle");
       await menuButton.click();
       await page.locator(".sidebar.is-mobile-open").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "true") throw new Error("Mobile menu button did not expose expanded state");
@@ -192,6 +192,14 @@ try {
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close mobile navigation");
       if (!(await menuButton.evaluate(element => element === document.activeElement))) throw new Error("Escape did not restore focus to the menu button");
+      await menuButton.click();
+      await page.getByRole("button", { name: "Close navigation menu" }).last().click();
+      await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
+      if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Drawer close button did not close navigation");
+      await menuButton.click();
+      await page.locator(".mobile-nav-backdrop").click({ position: { x: 10, y: 10 } });
+      await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
+      if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Backdrop did not close navigation");
       await navigateToSection(page, "Aid batches", true);
       await inspectViewport(page, viewport.width, viewport.height, "Mobile menu keyboard and navigation");
       await navigateToSection(page, "Overview", true);
