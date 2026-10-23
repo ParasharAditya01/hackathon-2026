@@ -176,6 +176,15 @@ function LandingPage({ onEnter, onExplore }) {
       <article><span className="process-index">03</span><div><h3>Recover when demand shifts</h3><p>Direct drop-offs and shelter closures trigger cancellation, reroute or escalation paths while cargo remains accounted for.</p></div><span className="process-symbol"><RotateCcw size={20} /></span></article>
       <article><span className="process-index">04</span><div><h3>Protect handling constraints</h3><p>Raw kits and infant formula require recorded water and fuel; perishable and medical aid require compatible storage.</p></div><span className="process-symbol"><ShieldCheck size={20} /></span></article>
     </div></section>
+    <section className="landing-testimonials" aria-labelledby="testimonials-title">
+      <div className="landing-testimonials-heading"><p className="landing-kicker">FEEDBACK, WITH PERMISSION</p><h2 id="testimonials-title">Trust should be earned.</h2><p>We will publish feedback here only after it has been provided and approved for public use.</p></div>
+      <div className="testimonial-pending" role="note" aria-label="Testimonials not yet available">
+        <span className="testimonial-pending-index">COMMUNITY FEEDBACK</span>
+        <div className="testimonial-pending-copy"><h3>No published testimonials yet</h3><p>AidFlow is a demonstration prototype. We have not added customer quotes, names, photos, roles or organisation logos because no verified, authorised testimonials have been supplied.</p></div>
+        <span className="testimonial-pending-status">AWAITING APPROVED FEEDBACK</span>
+      </div>
+      <p className="testimonial-editor-note">This section is ready for genuine feedback once the contributor's wording, identity, role, organisation and permission to publish are confirmed.</p>
+    </section>
     <section className="landing-faq" id="faq" aria-labelledby="faq-title">
       <div className="landing-faq-intro"><p className="landing-kicker">CLEAR ANSWERS, SAFER HANDOVERS</p><h2 id="faq-title">Frequently asked questions</h2><p>What AidFlow helps you explore—and what this prototype does not claim to do.</p></div>
       <div className="faq-list">
