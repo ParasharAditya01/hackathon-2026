@@ -1155,3 +1155,34 @@ textarea {
     transition: none;
   }
 }
+
+
+.mobile-drawer-close {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sidebar .brand {
+    padding-right: 42px;
+  }
+
+  .mobile-drawer-close {
+    position: absolute;
+    top: max(18px, env(safe-area-inset-top));
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--deep-wine);
+    background: var(--pure-surface);
+    cursor: pointer;
+  }
+
+  .mobile-drawer-close:focus-visible {
+    outline: 3px solid #7aa995;
+    outline-offset: 3px;
+  }
+}
