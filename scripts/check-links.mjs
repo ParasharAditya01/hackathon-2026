@@ -114,7 +114,7 @@ async function verifyExternalDestinations(anchors) {
 try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  let page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.goto(baseURL, { waitUntil: "networkidle" });
@@ -130,8 +130,10 @@ try {
   }
   console.log("PASS landing page links · brand and footer return to #top");
 
-  await page.evaluate(() => sessionStorage.removeItem("aidflow-entered"));
-  await page.reload({ waitUntil: "networkidle" });
+  await page.close();
+  page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.on("pageerror", error => pageErrors.push(error.message));
+  await page.goto(baseURL, { waitUntil: "networkidle" });
   await page.locator(".landing-nav-cta").click();
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
