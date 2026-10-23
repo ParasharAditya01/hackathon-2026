@@ -90,9 +90,42 @@ try {
     throw new Error("The landing-page resilience CTA did not open Resilience lab.");
   }
   await explorePage.close();
+  const primaryEntryPage = await context.newPage();
+  await primaryEntryPage.goto(baseURL, { waitUntil: "networkidle" });
+  await primaryEntryPage.getByRole("button", { name: /Open operations workspace/ }).click();
+  await primaryEntryPage.locator(".page-content").waitFor();
+  if ((await primaryEntryPage.locator(".breadcrumb strong").innerText()).trim() !== "Overview") {
+    throw new Error("The primary workspace CTA did not open Overview.");
+  }
+  await primaryEntryPage.close();
+  const footerEntryPage = await context.newPage();
+  await footerEntryPage.goto(baseURL, { waitUntil: "networkidle" });
+  const footerEntry = footerEntryPage.locator(".landing-footer").getByRole("button", { name: /Enter workspace/ });
+  await footerEntry.scrollIntoViewIfNeeded();
+  await footerEntry.click();
+  await footerEntryPage.locator(".page-content").waitFor();
+  if ((await footerEntryPage.locator(".breadcrumb strong").innerText()).trim() !== "Overview") {
+    throw new Error("The footer workspace CTA did not open Overview.");
+  }
+  await footerEntryPage.close();
   await page.getByRole("button", { name: /Enter operations/ }).click();
   await page.locator(".page-content").waitFor();
   console.log("PASS landing-page CTAs · workspace and resilience destinations");
+
+  // Overview shortcut actions must land on the promised destination and preserve the selected batch.
+  await page.locator(".urgent-row .text-action").first().click();
+  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Dispatch board") {
+    throw new Error("The urgency-queue Plan action did not open Dispatch board.");
+  }
+  if (!(await page.locator("form.form-card").first().getByLabel("Aid batch").inputValue())) {
+    throw new Error("The Plan action did not select an aid batch.");
+  }
+  await navigate(page, "Overview");
+  await page.getByRole("button", { name: /Open dispatch board/ }).click();
+  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Dispatch board") {
+    throw new Error("The Overview dispatch shortcut did not open Dispatch board.");
+  }
+  await navigate(page, "Overview");
 
   // Every navigation control must show the correct page.
   for (const section of sections) await navigate(page, section);
@@ -172,6 +205,17 @@ try {
   if (await page.locator(".assignment-card").count() !== 0) throw new Error("Delivered assignment remained in the active dispatch list.");
   console.log("PASS allocation → reservation confirmation → pickup → transit → delivery");
 
+  // An accepted claim can be cancelled before pickup, releasing its reservation.
+  const cancelledClaim = await createAllocation(page, 10);
+  await cancelledClaim.getByRole("button", { name: /Confirm claim/ }).click();
+  await navigate(page, "Dispatch board");
+  await page.getByRole("button", { name: /Cancel before pickup/ }).first().click();
+  await page.getByText(/Assignment updated\./).waitFor();
+  if (await page.getByRole("button", { name: /Cancel before pickup/ }).count()) {
+    throw new Error("Cancelling before pickup did not remove the cancellation action.");
+  }
+  console.log("PASS reservation cancellation before pickup");
+
   // Failure/disposition branch must change the assignment state and expose the correct next action.
   await page.getByRole("button", { name: /Open navigation menu/ }).count().then(async count => {
     if (count) await navigate(page, "Resilience lab");
@@ -195,6 +239,12 @@ try {
     const outcomeCount = await page.locator(".scenario-result ul li").count();
     if (outcomeCount < 1) throw new Error("Scenario " + scenario[0] + " produced no execution details.");
     console.log("PASS scenario action · " + scenario[0]);
+    if (scenario[1] === "ghost") {
+      await navigate(page, "Reservations");
+      await page.getByRole("button", { name: /Check expiry now/ }).click();
+      await page.getByText("Expired reservations and aid deadlines checked.").waitFor();
+      console.log("PASS manual reservation-expiry check");
+    }
   }
 
   // Native confirmation can be cancelled without mutating the demo.
@@ -227,7 +277,14 @@ try {
       if (!(await approveReroute.isEnabled())) throw new Error("Selecting a valid reroute destination did not enable approval.");
       await approveReroute.click();
       await page.getByText(/Reroute approved|Reroute blocked/).waitFor();
+      await recoveryCard.getByRole("button", { name: /Request reroute/ }).click();
+      await recoveryCard.getByRole("button", { name: "Escalate cargo" }).click();
+      await recoveryCard.getByRole("button", { name: "Reopen recovery" }).waitFor();
     } else {
+      await recoveryCard.getByRole("button", { name: "Escalate cargo" }).click();
+      await recoveryCard.getByRole("button", { name: "Reopen recovery" }).waitFor();
+      await recoveryCard.getByRole("button", { name: "Reopen recovery" }).click();
+      await recoveryCard.getByRole("button", { name: "Escalate cargo" }).waitFor();
       await recoveryCard.getByRole("button", { name: "Escalate cargo" }).click();
       await recoveryCard.getByRole("button", { name: "Reopen recovery" }).waitFor();
     }
@@ -235,8 +292,14 @@ try {
     await recoveryCard.getByRole("button", { name: "Reopen recovery" }).waitFor();
     await recoveryCard.getByRole("button", { name: "Reopen recovery" }).click();
     await recoveryCard.getByRole("button", { name: "Escalate cargo" }).waitFor();
+    await recoveryCard.getByRole("button", { name: "Escalate cargo" }).click();
+    await recoveryCard.getByRole("button", { name: "Reopen recovery" }).waitFor();
   }
-  console.log("PASS recovery controls · reroute gating or explicit escalation");
+  await recoveryCard.getByRole("button", { name: "Record failed cargo" }).click();
+  await recoveryCard.getByRole("button", { name: "Mark spoiled" }).waitFor();
+  await recoveryCard.getByRole("button", { name: "Mark spoiled" }).click();
+  await page.getByText(/Cargo disposition recorded\./).waitFor();
+  console.log("PASS recovery controls · reroute gating, escalation, reopening, and spoiled-cargo disposition");
 
   // Open alerts are actionable and disappear from the unresolved action queue when resolved.
   await navigate(page, "Alerts & audit");
