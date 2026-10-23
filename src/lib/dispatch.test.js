@@ -124,3 +124,34 @@ test("shelter closure after pickup preserves cargo and requires reroute or escal
   assert.equal(batch.picked, 40);
   assert.equal(batch.available + batch.reserved + batch.picked + batch.delivered + batch.rejected, batch.original);
 });
+
+
+test("unclaimed stock is quarantined after its safe-use deadline", () => {
+  const state = createSeedState();
+  const batch = state.donations.find(d => d.id === "B-180");
+  batch.deadline = new Date(Date.now() - 1000).toISOString();
+  assert.equal(expireAidBatches(state, Date.now()), 180);
+  assert.equal(batch.available, 0);
+  assert.equal(batch.rejected, 180);
+  assert.equal(state.spoiledTotal, 180);
+  assert.equal(expireAidBatches(state, Date.now()), 0);
+});
+
+test("cargo that misses its safe-use deadline is failed but stays in picked inventory until disposition", () => {
+  const state = createSeedState();
+  const plan = allocateAcrossRiders(state, { donationId: "B-180", quantity: 40, travelMinutes: 10, safetyBufferMinutes: 10 });
+  const reservation = plan.allocations[0].reservation;
+  const confirmed = confirmReservation(state, reservation.id);
+  const assignment = confirmed.assignment;
+  assert.equal(transitionAssignment(state, assignment.id, "picked_up").ok, true);
+  assert.equal(transitionAssignment(state, assignment.id, "in_transit").ok, true);
+  const batch = state.donations.find(d => d.id === "B-180");
+  batch.deadline = new Date(Date.now() - 1000).toISOString();
+  expireAidBatches(state, Date.now());
+  assert.equal(assignment.status, "failed");
+  assert.equal(batch.picked, 40);
+  assert.equal(disposeFailedCargo(state, assignment.id, "spoiled").ok, true);
+  assert.equal(batch.picked, 0);
+  assert.equal(batch.rejected, 180);
+  assert.equal(state.spoiledTotal, 180);
+});
