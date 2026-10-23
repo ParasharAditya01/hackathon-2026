@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import crypto from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -54,7 +55,7 @@ function corsHeaders(request) {
   if (!origin || !allowedOrigins.has(origin)) return {};
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, OPTIONS",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "Content-Type, Authorization",
     "access-control-max-age": "600",
     vary: "Origin",
@@ -75,6 +76,22 @@ async function route(request, response) {
     return;
   }
 
+  if (url.pathname === "/api/aid-batches" && request.method === "POST") {
+    let body = ""; for await (const chunk of request) { body += chunk; if (Buffer.byteLength(body) > 16384) { sendJson(response,413,{error:"Request body is too large."},headers); return; } }
+    let input; try { input=JSON.parse(body||"{}"); } catch { sendJson(response,400,{error:"Request body must be valid JSON."},headers); return; }
+    const donor=typeof input.donor==="string"?input.donor.trim():"",name=typeof input.name==="string"?input.name.trim():"",type=input.type,quantity=Number(input.quantity);
+    const pickupAt=new Date(input.pickupAt),deadline=new Date(input.deadline),location=typeof input.location==="string"?input.location.trim():"",handling=typeof input.handling==="string"?input.handling.trim():"";
+    const types=new Set(["prepared","perishable","raw","medical","infant_formula","essential"]);
+    if(!donor||donor.length>180||!name||name.length>180||!types.has(type)||!Number.isSafeInteger(quantity)||quantity<1||quantity>100000||!Number.isFinite(pickupAt.getTime())||!Number.isFinite(deadline.getTime())||pickupAt>=deadline||deadline<=new Date()||!location||location.length>300||handling.length>500){sendJson(response,400,{error:"Check donor, batch name, aid type, quantity, pickup window, future safe-use deadline, location, and handling notes."},headers);return;}
+    const client=await pool.connect();
+    try{await client.query("BEGIN");const id="B-"+crypto.randomUUID().replaceAll("-","").slice(0,5).toUpperCase();
+      await client.query(`INSERT INTO aid_batches (id,donor,name,aid_type,original_quantity,available_quantity,reserved_quantity,picked_quantity,delivered_quantity,rejected_quantity,pickup_at,safe_use_deadline,location,handling_notes) VALUES ($1,$2,$3,$4,$5,$5,0,0,0,0,$6,$7,$8,$9)`,[id,donor,name,type,quantity,pickupAt.toISOString(),deadline.toISOString(),location,handling]);
+      const saved=await client.query("INSERT INTO submission_confirmations (action,reference_id) VALUES ($1,$2) RETURNING token",["aid_batch_registered",id]);await client.query("COMMIT");
+      sendJson(response,201,{status:"confirmed",token:saved.rows[0].token,batch:{id,donor,name,type,quantity,pickupAt:pickupAt.toISOString(),deadline:deadline.toISOString(),location,handling}},headers);
+    }catch(error){await client.query("ROLLBACK").catch(()=>{});if(error.code==="23505")sendJson(response,409,{error:"A conflicting batch reference was generated. Please retry."},headers);else{console.error("Aid batch registration failed:",error.message);sendJson(response,500,{error:"The batch could not be saved. Your entries have not been confirmed."},headers);}}finally{client.release();}return;
+  }
+  const confirmationMatch=url.pathname.match(/^\\/api\\/confirmations\\/([0-9a-f-]{36})$/i);
+  if(confirmationMatch&&request.method==="GET"){try{const result=await pool.query("SELECT action,reference_id FROM submission_confirmations WHERE token=$1 AND created_at>NOW()-INTERVAL '24 hours'",[confirmationMatch[1]]);const record=result.rows[0];if(!record||record.action!=="aid_batch_registered"){sendJson(response,404,{status:"unverified",error:"No valid recent confirmation was found."},headers);return;}sendJson(response,200,{status:"confirmed",actionLabel:"Aid batch registration",reference:record.reference_id},headers);}catch(error){console.error("Confirmation verification failed:",error.message);sendJson(response,503,{status:"unverified",error:"Confirmation service is temporarily unavailable."},headers);}return;}
   if (url.pathname === "/api/health" && request.method === "GET") {
     sendJson(response, 200, { status: "ok", service: "aidflow-api" }, headers);
     return;
@@ -101,9 +118,9 @@ async function route(request, response) {
 
 const server = createServer((request, response) => {
   // Reject unsupported methods before routing; no state-changing route is public.
-  if (!["GET", "OPTIONS"].includes(request.method || "")) {
+  if (!["GET", "POST", "OPTIONS"].includes(request.method || "")) {
     sendJson(response, 405, { error: "Method not allowed." }, {
-      allow: "GET, OPTIONS",
+      allow: "GET, POST, OPTIONS",
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
     });
