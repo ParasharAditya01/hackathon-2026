@@ -90,7 +90,7 @@ async function createAllocation(page, quantity, submitTwice = false) {
     await submitButton.click();
   }
   await navigate(page, "Reservations");
-  const card = page.locator(".reservation-card").first();
+  const card = page.locator(".reservation-card").filter({ hasText: "Pending" }).first();
   await card.waitFor();
   if (submitTwice && await page.locator(".reservation-card").count() !== 1) {
     throw new Error("Two rapid allocation submissions created duplicate reservations.");
