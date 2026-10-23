@@ -134,10 +134,9 @@ try {
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on("pageerror", error => pageErrors.push(error.message));
   await page.addInitScript(() => {
-    try { sessionStorage.removeItem("aidflow-entered"); } catch {}
+    try { sessionStorage.setItem("aidflow-entered", "1"); } catch {}
   });
   await page.goto(baseURL, { waitUntil: "networkidle" });
-  await page.locator(".landing-nav-cta").click();
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
   const brand = page.locator(".sidebar .brand");
