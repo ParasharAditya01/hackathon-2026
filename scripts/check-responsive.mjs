@@ -7,6 +7,7 @@ const viewports = [
   { width: 280, height: 800 },
   { width: 320, height: 800 },
   { width: 360, height: 800 },
+  { width: 375, height: 812 },
   { width: 390, height: 844 },
   { width: 430, height: 932 },
   { width: 768, height: 900 },
@@ -78,7 +79,42 @@ async function inspectViewport(page, width, height, viewName) {
         text: (element.innerText || "").trim().slice(0, 70),
       }];
     });
-    return { viewportWidth, rootWidth, bodyWidth, offenders, clipped };
+    const containerOverflow = [...document.querySelectorAll(
+      ".surface, .metric-card, .batch-card, .rider-card, .site-card, .reservation-card, .scenario-card, .assignment-card, .form-card, .primary-nav, .landing-nav, .landing-footer, .route-illustration, .metrics-grid, .form-grid, .scenario-grid"
+    )].flatMap((element) => {
+      if (!element.getClientRects().length) return [];
+      if (getComputedStyle(element).display === "none") return [];
+      if (element.scrollWidth <= element.clientWidth + 3) return [];
+      return [{
+        tag: element.tagName.toLowerCase(),
+        className: typeof element.className === "string" ? element.className : "",
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        text: (element.innerText || "").trim().slice(0, 70),
+      }];
+    });
+    const controlOverflow = [...document.querySelectorAll("button, input, select, textarea, img, video, canvas, iframe")].flatMap((element) => {
+      if (!element.getClientRects().length) return [];
+      const rect = element.getBoundingClientRect();
+      const parent = element.parentElement;
+      const parentRect = parent?.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") return [];
+      if (parent && ["auto", "scroll"].includes(getComputedStyle(parent).overflowX)) return [];
+      if (parentRect && (rect.left < parentRect.left - 2 || rect.right > parentRect.right + 2)) {
+        return [{
+          tag: element.tagName.toLowerCase(),
+          className: typeof element.className === "string" ? element.className : "",
+          parentClass: typeof parent.className === "string" ? parent.className : "",
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          parentLeft: Math.round(parentRect.left),
+          parentRight: Math.round(parentRect.right),
+        }];
+      }
+      return [];
+    });
+    return { viewportWidth, rootWidth, bodyWidth, offenders, clipped, containerOverflow, controlOverflow };
   });
 
   const failures = [];
@@ -95,6 +131,12 @@ async function inspectViewport(page, width, height, viewName) {
     failures.push(`${result.clipped.length} element(s) clip horizontally overflowing content: ${JSON.stringify(result.clipped.slice(0, 6))}`);
   }
 
+  if (result.containerOverflow.length) {
+    failures.push(`${result.containerOverflow.length} card/grid/navigation container(s) have internal horizontal overflow: ${JSON.stringify(result.containerOverflow.slice(0, 6))}`);
+  }
+  if (result.controlOverflow.length) {
+    failures.push(`${result.controlOverflow.length} controls/media element(s) exceed their immediate parent: ${JSON.stringify(result.controlOverflow.slice(0, 6))}`);
+  }
   if (failures.length) {
     throw new Error(`[${width}x${height}] ${viewName}: ${failures.join("; ")}`);
   }
