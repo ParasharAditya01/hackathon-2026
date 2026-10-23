@@ -295,6 +295,16 @@ try {
   if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") throw new Error("Breadcrumb home link did not return to Overview.");
   console.log("PASS breadcrumb home link · Overview");
 
+  await page.goto(baseURL + "/this-route-should-not-exist", { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: /This route has gone missing/i }).waitFor();
+  if (!(await page.getByText(/couldn’t find the page you’re looking for/i).count())) throw new Error("Unknown URL did not explain that the page could not be found.");
+  for (const name of ["Return to homepage", "Open operations", "Aid batches", "Dispatch board", "Resilience lab"]) {
+    if (!(await page.getByRole(name === "Return to homepage" ? "link" : "button", { name: new RegExp(name, "i") }).count())) throw new Error("404 recovery destination is missing: " + name);
+  }
+  await page.getByRole("link", { name: /Return to homepage/i }).click();
+  await page.locator(".landing-page").waitFor();
+  console.log("PASS custom 404 · unknown URL, explanatory copy, homepage and relevant-section recovery links");
+
   await verifyExternalDestinations(externalAnchors);
   if (pageErrors.length || consoleErrors.length) throw new Error("Browser errors during link audit: " + [...pageErrors, ...consoleErrors].join("; "));
   console.log("Link audit passed: internal anchors, brand links, and all workspace navigation destinations are valid.");
