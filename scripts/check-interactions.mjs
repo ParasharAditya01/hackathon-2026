@@ -200,6 +200,7 @@ try {
   await batchForm.getByLabel("Pickup location").fill("Test loading bay");
   await batchForm.getByRole("button", { name: /Register batch/ }).dblclick();
   await page.getByText("Interaction Test Meals", { exact: true }).waitFor();
+  await page.getByRole("status").getByText("Aid batch registered.").waitFor();
   const search = page.getByRole("searchbox", { name: "Search aid batches, donors, or aid type" });
   await search.fill("Interaction Test Meals");
   if (await page.locator(".batch-card").count() !== 1) throw new Error("Batch search did not filter to the matching record.");
@@ -222,7 +223,9 @@ try {
   await riderForm.getByRole("button", { name: /Add rider/ }).click();
   const riderCard = page.locator(".rider-card").filter({ hasText: "Interaction Test Rider" });
   await riderCard.waitFor();
+  await page.getByRole("status").getByText("Rider added to fleet.").waitFor();
   await riderCard.getByRole("button", { name: "Set unavailable" }).click();
+  await page.getByRole("status").getByText("Rider availability updated.").waitFor();
   await riderCard.getByRole("button", { name: "Set available" }).waitFor();
   await riderCard.getByRole("button", { name: "Set available" }).click();
   await riderCard.getByRole("button", { name: "Set unavailable" }).waitFor();
@@ -239,6 +242,7 @@ try {
   await siteForm.getByRole("button", { name: /Add receiving site/ }).click();
   const siteCard = page.locator(".site-card").filter({ hasText: "Interaction Test Shelter" });
   await siteCard.waitFor();
+  await page.getByRole("status").getByText("Receiving site registered.").waitFor();
   page.once("dialog", dialog => dialog.accept("10.5"));
   await siteCard.getByRole("button", { name: "Record direct drop-off" }).click();
   await page.getByText("Direct drop-off must be a positive whole number of units.").waitFor();
@@ -247,7 +251,7 @@ try {
   }
   page.once("dialog", dialog => dialog.accept("10"));
   await siteCard.getByRole("button", { name: "Record direct drop-off" }).click();
-  await page.getByText("Direct drop-off recorded; affected cargo requires recovery.").waitFor();
+  await page.getByRole("status").getByText("Direct drop-off recorded. Review any recovery alerts for affected cargo.").waitFor();
   if (!(await siteCard.locator(".site-demand").innerText()).includes("10")) throw new Error("Direct drop-off did not update delivered units.");
   page.once("dialog", dialog => dialog.accept("20"));
   await siteCard.getByRole("button", { name: "Edit demand" }).click();
@@ -298,6 +302,7 @@ try {
   await impossibleForm.getByLabel("Estimated travel (minutes)").fill("600");
   await impossibleForm.getByLabel("Safety buffer (minutes)").fill("5");
   await impossibleForm.getByRole("button", { name: /Find feasible split/ }).click();
+  await page.getByRole("status").getByText("No feasible reservation created.").waitFor();
   await page.getByText("No feasible allocation", { exact: true }).waitFor();
   await page.getByRole("button", { name: /Review reservations/ }).click();
   if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Reservations") {
