@@ -1640,3 +1640,16 @@ img, video { block-size: auto; }
   .app-footer-brand-name { align-items:flex-start; }
   .footer-nav { gap:10px 13px; }
 }
+
+
+/* AidFlow signature motion: the route draws between a supply node and a receiving node. */
+.aidflow-mark{display:block;width:100%;height:100%;overflow:visible}
+.logo-intro .logo-route{stroke-dasharray:48;stroke-dashoffset:48;animation:aidflow-route-draw 780ms cubic-bezier(.22,.7,.25,1) 120ms both}
+.logo-intro circle{transform-box:fill-box;transform-origin:center;animation:aidflow-node-arrive 420ms ease-out both}
+.logo-intro circle:last-of-type{animation-delay:220ms}
+.brand-mark .aidflow-mark .logo-route{stroke-dasharray:48;stroke-dashoffset:48;animation:aidflow-route-draw 680ms cubic-bezier(.22,.7,.25,1) 140ms both}
+.brand-mark .aidflow-mark circle{transform-box:fill-box;transform-origin:center;animation:aidflow-node-arrive 380ms ease-out both}
+.brand-mark .aidflow-mark circle:last-of-type{animation-delay:180ms}
+@keyframes aidflow-route-draw{to{stroke-dashoffset:0}}
+@keyframes aidflow-node-arrive{0%{opacity:.45;transform:scale(.72)}70%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.logo-intro .logo-route,.brand-mark .aidflow-mark .logo-route,.logo-intro circle,.brand-mark .aidflow-mark circle{animation:none;stroke-dashoffset:0;transform:none;opacity:1}}
