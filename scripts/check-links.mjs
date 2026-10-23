@@ -163,7 +163,7 @@ try {
         parentControl.innerText ||
         ""
       ).trim();
-      const decorativeLucide = /(^|\\s)lucide(?:\\s|$)/.test(graphic.className) && (parentControl ? Boolean(controlName) : true);
+      const decorativeLucide = /(^|\s)lucide(?:\s|$)/.test(graphic.className) && (parentControl ? Boolean(controlName) : true);
       if (!graphic.hidden && !(graphic.role === "img" && graphic.label) && !decorativeLucide) {
         failures.push("SVG is neither hidden as decorative nor given an accessible image role and name: " + graphic.className);
       }
