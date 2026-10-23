@@ -20,5 +20,9 @@ jobs:
         run: npm install
       - name: Run domain tests
         run: npm test
+      - name: Install Chromium for responsive browser checks
+        run: npx playwright install --with-deps chromium
+      - name: Verify horizontal overflow across viewport sizes and views
+        run: npm run test:responsive
       - name: Build production bundle
         run: npm run build
