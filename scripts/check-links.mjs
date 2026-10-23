@@ -134,12 +134,13 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.locator(".page-content").waitFor();
   externalAnchors = externalAnchors.concat(await auditAnchors(page, "workspace"));
-  const brand = page.locator(".sidebar .brand");
+  const brand = page.getByRole("link", { name: "AidFlow home — Overview" });
+  const brandGeometry = await brand.evaluate(element => { const rect = element.getBoundingClientRect(); const mark = element.querySelector(".brand-mark"); const markRect = mark.getBoundingClientRect(); return { width: rect.width, height: rect.height, markWidth: markRect.width, markHeight: markRect.height, color: getComputedStyle(element.querySelector(".brand-copy strong")).color, background: getComputedStyle(element.closest(".sidebar")).backgroundColor }; });
+  if (brandGeometry.width <= 0 || brandGeometry.height <= 0 || Math.abs(brandGeometry.markWidth - brandGeometry.markHeight) > 0.5) throw new Error("Workspace logo dimensions or aspect ratio are invalid: " + JSON.stringify(brandGeometry));
   await brand.click();
-  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") {
-    throw new Error("Workspace brand button did not navigate to Overview.");
-  }
-  console.log("PASS workspace brand button · click returns to Overview");
+  if ((await page.locator(".breadcrumb strong").innerText()).trim() !== "Overview") throw new Error("Workspace logo link did not navigate to Overview.");
+  if (await brand.getAttribute("href") !== "#overview") throw new Error("Workspace logo link does not point to the Overview home target.");
+  console.log("PASS workspace logo link · accessible name, Overview destination, square mark, fixed layout dimensions");
 
   for (const section of sections) {
     await page.locator(".nav-item").filter({ hasText: section }).click();
