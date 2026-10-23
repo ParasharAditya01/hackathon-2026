@@ -201,6 +201,8 @@ export default function App() {
   const [shelterForm, setShelterForm] = useState({ name: "", zone: "Central", demand: 50, water: false, fuel: false, coldStorage: false, medicalStorage: false });
   const [rerouteChoice, setRerouteChoice] = useState({});
 
+  const isNotFoundPath = typeof window !== "undefined" && window.location.pathname !== "/";
+
   const mutate = (operation, successMessage) => {
     const next = clone(data);
     const outcome = operation(next);
@@ -215,8 +217,8 @@ export default function App() {
   };
 
   useEffect(() => {
-    const title = entered ? (documentTitles[page] || documentTitles.Overview) : landingDocumentTitle;
-    const description = entered ? (documentDescriptions[page] || documentDescriptions.Overview) : landingDocumentDescription;
+    const title = isNotFoundPath ? "Page Not Found (404) | AidFlow" : entered ? (documentTitles[page] || documentTitles.Overview) : landingDocumentTitle;
+    const description = isNotFoundPath ? "This AidFlow page could not be found. Return to the homepage or open a relevant operations section." : entered ? (documentDescriptions[page] || documentDescriptions.Overview) : landingDocumentDescription;
     document.title = title;
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
@@ -225,7 +227,7 @@ export default function App() {
       document.head.appendChild(metaDescription);
     }
     metaDescription.setAttribute("content", description);
-  }, [entered, page]);
+  }, [entered, page, isNotFoundPath]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 760px)");
@@ -505,7 +507,6 @@ export default function App() {
   }[page]();
   const pageWithRelatedLinks = <div className="page-route" id={pageRoutes[page]}>{pageContent}<RelatedLinks page={page} onNavigate={navigateTo} /></div>;
 
-  const isNotFoundPath = typeof window !== "undefined" && window.location.pathname !== "/";
   if (isNotFoundPath) return <main className="not-found-page">
     <a href="/" className="not-found-brand" aria-label="AidFlow home"><span className="not-found-mark"><AidFlowMark /></span><span><strong>AidFlow</strong><small>CIVIC MICRO-LOGISTICS</small></span></a>
     <section className="not-found-content" aria-labelledby="not-found-title">
@@ -514,12 +515,12 @@ export default function App() {
       <p className="not-found-copy">We couldn’t find the page you’re looking for. The address may be incorrect, or the page may have moved. Your aid operations are still one step away.</p>
       <div className="not-found-actions">
         <a className="not-found-primary" href="/">Return to homepage <ArrowRight size={16} aria-hidden="true" /></a>
-        <button className="not-found-secondary" type="button" onClick={() => { setPage("Overview"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Open operations</button>
+        <a className="not-found-secondary" href="/?section=overview">Open operations</a>
       </div>
       <div className="not-found-links"><span>GO TO A SECTION</span>
-        <button type="button" onClick={() => { setPage("Aid batches"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Aid batches <ArrowRight size={13} aria-hidden="true" /></button>
-        <button type="button" onClick={() => { setPage("Dispatch board"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Dispatch board <ArrowRight size={13} aria-hidden="true" /></button>
-        <button type="button" onClick={() => { setPage("Resilience lab"); setEntered(true); try { sessionStorage.setItem("aidflow-entered", "1"); } catch {} }}>Resilience lab <ArrowRight size={13} aria-hidden="true" /></button>
+        <a className="not-found-section-link" href="/?section=aid-batches">Aid batches <ArrowRight size={13} aria-hidden="true" /></a>
+        <a className="not-found-section-link" href="/?section=dispatch-board">Dispatch board <ArrowRight size={13} aria-hidden="true" /></a>
+        <a className="not-found-section-link" href="/?section=resilience-lab">Resilience lab <ArrowRight size={13} aria-hidden="true" /></a>
       </div>
     </section>
     <footer className="not-found-footer"><span>© {new Date().getFullYear()} AidFlow</span><span>Built around safer handovers.</span></footer>
