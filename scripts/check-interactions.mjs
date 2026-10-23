@@ -4,6 +4,16 @@ import { chromium } from "playwright";
 
 const baseURL = "http://127.0.0.1:4181";
 const sections = ["Overview", "Aid batches", "Dispatch board", "Riders", "Receiving sites", "Reservations", "Alerts & audit", "Resilience lab"];
+const expectedMetadata = {
+  Overview: ["AidFlow | Civic Aid Operations", "Explore AidFlow’s demo overview of time-critical surplus aid, safety constraints and civic micro-logistics. Enter the workspace to review the sample operations."],
+  "Aid batches": ["Aid Batches & Surplus Inventory | AidFlow", "Review AidFlow’s sample aid batches, surplus inventory, handling notes and safe-use deadlines. Explore how available supplies are tracked in the demo."],
+  "Dispatch board": ["Dispatch Planning & Deliveries | AidFlow", "Explore AidFlow’s simulated dispatch assignments, delivery deadlines, rider capacity and rerouting options. Open the workspace to review delivery planning."],
+  Riders: ["Rider Fleet & Capacity | AidFlow", "Review the demo rider fleet, transport types, carrying capacity and availability used in AidFlow’s dispatch planning simulation."],
+  "Receiving sites": ["Receiving Sites & Aid Demand | AidFlow", "Explore AidFlow’s sample receiving sites, aid demand and available storage or handling resources to understand destination suitability."],
+  Reservations: ["Aid Reservations & Claim Queue | AidFlow", "Review AidFlow’s simulated aid reservations, claim queue and reservation status for coordinating sample supply with receiving-site needs."],
+  "Alerts & audit": ["Operational Alerts & Audit Trail | AidFlow", "Explore AidFlow’s demo operational alerts and audit trail to review simulated dispatch events, warnings and recorded workflow changes."],
+  "Resilience lab": ["Resilience Lab & Failure Simulations | AidFlow", "Run AidFlow’s built-in demo scenarios to explore how simulated dispatch responds to delays, unavailable riders, site closures and resource constraints."],
+};
 const scenarios = [
   ["Urgent safe-use deadline", "expiry"],
   ["Split 180 meals", "split"],
@@ -59,6 +69,15 @@ async function navigate(page, section) {
   await page.locator(".page-content").waitFor();
   const actual = (await page.locator(".breadcrumb strong").innerText()).trim();
   if (actual !== section) throw new Error("Navigation to " + section + " opened " + actual + ".");
+  const [expectedTitle, expectedDescription] = expectedMetadata[section];
+  const metadata = await page.evaluate(() => ({
+    title: document.title,
+    description: document.querySelector('meta[name="description"]')?.content || "",
+  }));
+  if (metadata.title !== expectedTitle) throw new Error("Wrong document title for " + section + ": " + metadata.title);
+  if (metadata.description !== expectedDescription) throw new Error("Wrong meta description for " + section + ": " + metadata.description);
+  if (metadata.description.length > 160) throw new Error("Meta description exceeds 160 characters for " + section + ".");
+  console.log("PASS rendered title and unique meta description · " + section);
 }
 
 async function resetFromScenarios(page, accept) {
