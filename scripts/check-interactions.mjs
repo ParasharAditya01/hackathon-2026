@@ -84,7 +84,7 @@ async function resetFromScenarios(page, accept) {
   page.once("dialog", dialog => accept ? dialog.accept() : dialog.dismiss());
   await page.getByRole("button", { name: /Reset scenario data/ }).click();
   if (accept) {
-    await page.getByText("Demo reset to seeded scenario data.").waitFor();
+    await page.getByText("Scenario data reset to the original illustrative records.").waitFor();
     await page.locator(".scenario-result").count().then(count => {
       if (count !== 0) throw new Error("Reset did not clear the scenario execution log.");
     });
@@ -265,7 +265,7 @@ try {
   // Return to a known fixture so the extra test rider/site cannot alter allocation cardinality.
   page.once("dialog", dialog => dialog.accept());
   await page.locator(".profile-button").click();
-  await page.getByText("Demo reset to seeded scenario data.").waitFor();
+  await page.getByText("Scenario data reset to the original illustrative records.").waitFor();
 
   // Allocation must create reservations once; reservation and assignment buttons advance real state.
   const allocationCard = await createAllocation(page, 40, true);
