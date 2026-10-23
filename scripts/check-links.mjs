@@ -57,7 +57,7 @@ async function auditAnchors(page, contextName) {
       if (!exists) failures.push(contextName + ": dead anchor " + url.hash + " (" + anchor.text + ")");
       else console.log("PASS internal anchor · " + contextName + " · " + url.hash + " · " + (anchor.text || "(unlabelled)"));
     } else if (url.origin === new URL(baseURL).origin) {
-      const response = await page.request.get(url.href, { timeout: 10000 });
+      const response = await page.context().request.get(url.href, { timeout: 10000 });
       if (!response.ok()) failures.push(contextName + ": internal destination returned HTTP " + response.status() + " · " + url.href);
       else console.log("PASS internal destination · " + contextName + " · " + url.pathname);
     }
