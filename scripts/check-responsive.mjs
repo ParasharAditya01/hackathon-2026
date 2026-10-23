@@ -189,7 +189,7 @@ try {
     await page.getByText(/40 units reserved/i).waitFor();
     await inspectViewport(page, viewport.width, viewport.height, "Feasible allocation journey");
 
-    await page.getByRole("button", { name: /Review reservations/i }).click();
+    // A successful plan routes directly to Reservations for the next operator step.
     await page.locator(".reservation-card").first().waitFor();
     await page.locator(".reservation-card").first().getByRole("button", { name: /Confirm claim/i }).click();
     await page.getByText(/Reservation confirmation checked/i).waitFor();
