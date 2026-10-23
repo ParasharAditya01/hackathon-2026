@@ -13,6 +13,7 @@ Open the local URL printed by Vite. To run domain tests and verify a production 
 
     npm test
     npm run test:links
+    npm run test:interactions
     npm run test:responsive
     npm run build
     npm run preview
@@ -39,6 +40,7 @@ Open the local URL printed by Vite. To run domain tests and verify a production 
 - **Judge resilience lab:** urgent expiry, 180-unit split delivery with 40-unit rider capacity, a 30-minute unresponsive-volunteer simulation, direct drop-off filling demand during transit, shelter closure during transit, and missing cooking resources.
 - **Domain tests and CI:** Node's built-in test runner covers split allocation, idempotent claim expiry, safe-use quarantine, resource compatibility, reservation-to-pickup inventory movement, direct-drop recovery, and deadline safety. GitHub Actions runs tests and a Vite production build on pushes and pull requests.
 - **Link audit:** `npm run test:links` checks landing-page anchors, the workspace brand target, all eight workspace navigation destinations, and any external anchor URLs. External destinations that block automated requests are reported as unverified instead of being silently treated as healthy.
+- **Interaction audit:** `npm run test:interactions` uses Playwright to submit forms, verify search filtering and empty states, exercise site/rider controls and native dialogs, run all six resilience scenarios, and walk dispatch assignments through confirmation, pickup, transit, delivery, cancellation, failure, reroute, escalation, and disposition.
 
 ## Core inventory rules
 
