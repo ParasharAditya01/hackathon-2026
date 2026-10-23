@@ -149,7 +149,9 @@ try {
   for (const viewport of viewports) {
     // A fresh page gets isolated sessionStorage so every viewport starts on the landing screen.
     const page = await browser.newPage({ viewport });
+    const pageErrors = [];
     page.on("pageerror", (error) => {
+      pageErrors.push(error.message);
       console.error("Browser page error:", error.message);
     });
     await page.goto(baseURL, { waitUntil: "networkidle" });
@@ -164,10 +166,53 @@ try {
       await page.locator(".page-content").waitFor();
       await inspectViewport(page, viewport.width, viewport.height, section);
     }
+
+    // Exercise the primary operator journey at every viewport.
+    const stamp = String(viewport.width);
+    await page.locator(".nav-item").filter({ hasText: "Aid batches" }).click();
+    const batchForm = page.locator("form.form-card").first();
+    await batchForm.getByLabel("Donor / organization").fill("Responsive Test Kitchen " + stamp);
+    await batchForm.getByLabel("Batch name").fill("Viewport test meals " + stamp);
+    await batchForm.getByLabel("Quantity (units)").fill("12");
+    await batchForm.getByLabel("Pickup location").fill("Test loading bay");
+    await batchForm.getByRole("button", { name: /Register batch/i }).click();
+    await page.getByText("Viewport test meals " + stamp, { exact: true }).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Aid batch creation journey");
+
+    await page.locator(".nav-item").filter({ hasText: "Dispatch board" }).click();
+    const allocationForm = page.locator("form.form-card").first();
+    await allocationForm.getByLabel("Aid batch").selectOption("B-180");
+    await allocationForm.getByLabel("Units to allocate").fill("40");
+    await allocationForm.getByLabel("Estimated travel (minutes)").fill("10");
+    await allocationForm.getByLabel("Safety buffer (minutes)").fill("5");
+    await allocationForm.getByRole("button", { name: /Find feasible split/i }).click();
+    await page.getByText(/40 units reserved/i).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Feasible allocation journey");
+
+    await page.getByRole("button", { name: /Review reservations/i }).click();
+    await page.locator(".reservation-card").first().waitFor();
+    await page.locator(".reservation-card").first().getByRole("button", { name: /Confirm claim/i }).click();
+    await page.getByText(/Reservation confirmation checked/i).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Reservation confirmation journey");
+
+    await page.locator(".nav-item").filter({ hasText: "Dispatch board" }).click();
+    await page.getByRole("button", { name: /Confirm pickup/i }).first().click();
+    await page.getByRole("button", { name: /Start transit/i }).first().waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Pickup journey");
+    await page.getByRole("button", { name: /Start transit/i }).first().click();
+    await page.getByRole("button", { name: /Confirm delivery/i }).first().waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Transit journey");
+    await page.getByRole("button", { name: /Confirm delivery/i }).first().click();
+    await page.getByText(/Delivery recorded|Assignment updated/i).waitFor();
+    await inspectViewport(page, viewport.width, viewport.height, "Delivery journey");
+
+    if (pageErrors.length) {
+      throw new Error("[" + viewport.width + "x" + viewport.height + "] browser errors: " + pageErrors.join("; "));
+    }
     await page.close();
   }
 
-  console.log(`Responsive overflow check passed for ${viewports.length} viewport sizes and all 9 views.`);
+  console.log(`Responsive layout and main-journey checks passed for ${viewports.length} viewport sizes, all 9 views, and the aid-intake-to-delivery flow.`);
 } finally {
   if (browser) await browser.close();
   server.kill("SIGTERM");
