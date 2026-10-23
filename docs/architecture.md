@@ -22,10 +22,11 @@ AidFlow coordinates donors, volunteer riders, receiving shelters, and an operati
 2. Estimated arrival must fit before the batch deadline with a 10-minute safety buffer.
 3. Shelter prerequisites are hard constraints. Ration kits require clean water and cooking fuel in the current demo model.
 4. Split allocation never assigns one rider more than once in the same allocation pass.
-5. Unconfirmed reservation timeout releases stock and rider availability in the simulation.
-6. At delivery time, site status, remaining demand, and food deadline are rechecked.
-7. If the receiving site closes, attempt rerouting to an open, compatible site with sufficient demand; otherwise escalate visibly.
-8. A delivery or reroute is not presented as a production-verified real-world outcome.
+5. Active reservations and in-transit assignments hold shelter demand so later allocations cannot oversubscribe it.
+6. Unconfirmed reservation timeout releases stock, held demand, and rider availability in the simulation.
+7. At delivery time, site status, remaining demand, and food deadline are rechecked.
+8. If the receiving site closes, attempt rerouting to an open, compatible site with unreserved demand; otherwise escalate visibly.
+9. A delivery or reroute is not presented as a production-verified real-world outcome.
 
 ## Important architecture gap
 These rules currently execute in the browser against in-memory state. They are not secure or authoritative against concurrent users or a malicious client. Before production, move validation and state transitions into a backend transaction, add authentication/authorization, persist an append-only audit trail, and use server time for reservation deadlines. Realtime subscriptions and external routing should be added only after the backend invariants are enforced.
