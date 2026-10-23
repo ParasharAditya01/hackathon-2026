@@ -1356,3 +1356,7 @@ textarea {
   outline: 3px solid var(--brass, #B58A4A);
   outline-offset: 3px;
 }
+
+/* Responsive media guard: preserve intrinsic aspect ratios and prevent overflow if image assets are added. */
+img, picture, video, canvas { max-inline-size: 100%; }
+img, video { block-size: auto; }
