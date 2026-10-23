@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity, AlertTriangle, ArrowRight, Bike, Boxes, CheckCircle2, Clock3,
+  Activity, AlertTriangle, ArrowLeft, ArrowRight, Bike, Boxes, CheckCircle2, Clock3,
   HandHeart, LayoutDashboard, MapPinned, PackageCheck, Plus, RotateCcw,
   ShieldCheck, Truck, Warehouse, XCircle, Zap, ClipboardList, HeartPulse
 } from "lucide-react";
@@ -271,6 +271,13 @@ export default function App() {
     }
   };
 
+  const returnToLanding = () => {
+    try { sessionStorage.removeItem("aidflow-entered"); } catch { /* session storage is optional */ }
+    setMobileMenuOpen(false);
+    setEntered(false);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* storage is optional in this demo */ }
   }, [data]);
@@ -499,7 +506,7 @@ export default function App() {
       {isMobileNavViewport && <button className="mobile-drawer-close" type="button" aria-label="Close navigation menu" onClick={() => { setMobileMenuOpen(false); mobileMenuButtonRef.current?.focus(); }}><XCircle size={20} aria-hidden="true" /></button>}
       <div className="workspace-label">WORKSPACE</div>
       <nav className="primary-nav" aria-label="Primary navigation">{navItems.map(([label, Icon]) => <button className={"nav-item " + (page === label ? "is-active" : "")} key={label} type="button" onClick={() => navigateTo(label)} aria-current={page === label ? "page" : undefined}><Icon size={18} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>{label === "Dispatch board" && <span className="nav-count" aria-label={activeAssignments.length + " active assignments"}>{activeAssignments.length}</span>}{label === "Reservations" && <span className="nav-count" aria-label={pendingReservations.length + " pending reservations"}>{pendingReservations.length}</span>}</button>)}</nav>
-      <div className="sidebar-bottom"><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div>
+      <div className="sidebar-bottom"><button className="back-home-button" type="button" onClick={returnToLanding}><ArrowLeft size={16} aria-hidden="true" /><span>Back to home</span></button><div className="safety-note"><span className="safety-icon"><ShieldCheck size={17} /></span><div><strong>Safety-first dispatch</strong><p>Time, capacity and compatibility are hard constraints.</p></div></div><button className="profile-button" type="button" onClick={resetDemo}><span className="avatar">DEMO</span><span className="profile-copy"><strong>Demo workspace</strong><small>Browser-local simulation</small></span><RotateCcw size={16} className="profile-settings" /></button></div>
     </aside>
     <main className="main-content" id="overview"><header className="topbar">
       {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
