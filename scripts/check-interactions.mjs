@@ -274,7 +274,9 @@ try {
   await page.getByRole("button", { name: /Confirm delivery/ }).first().waitFor();
   await page.getByRole("button", { name: /Confirm delivery/ }).first().click();
   await page.getByText(/Assignment updated\./).waitFor();
-  if (await page.locator(".assignment-card").count() !== 0) throw new Error("Delivered assignment remained in the active dispatch list.");
+  const deliveredCard = page.locator(".assignment-card").filter({ has: page.getByText("Delivered", { exact: true }) });
+  await deliveredCard.first().waitFor();
+  if (await deliveredCard.getByRole("button").count() !== 0) throw new Error("Delivered assignment still exposes lifecycle actions.");
   console.log("PASS allocation → reservation confirmation → pickup → transit → delivery");
 
   // An accepted claim can be cancelled before pickup, releasing its reservation.
