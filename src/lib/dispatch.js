@@ -82,7 +82,7 @@ export function validateFeasibility(state, { donationId, riderId, shelterId, qua
   if (d && s && !s.accepts.includes(d.type)) reasons.push("Receiving site does not accept this aid type.");
   if (d && s && ["raw", "infant_formula"].includes(d.type) && (!s.water || !s.fuel)) reasons.push("This aid type requires recorded clean water and cooking fuel at the destination.");
   if (d && s && ["perishable", "medical"].includes(d.type) && !s.coldStorage) reasons.push("This aid type requires recorded cold-chain storage at the destination.");
-  if (d && s && d.type === "medical" && !s.medicalStorage) reasons.push("Medical supplies require an appropriate recorded storage area.");
+  if (d && s && d.type === "medical" && !s.medicalStorage) reasons.push("Medical supplies require appropriate medical storage.");
   return reasons;
 }
 
