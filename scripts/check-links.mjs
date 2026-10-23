@@ -133,6 +133,9 @@ try {
   await page.close();
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on("pageerror", error => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    try { sessionStorage.removeItem("aidflow-entered"); } catch {}
+  });
   await page.goto(baseURL, { waitUntil: "networkidle" });
   await page.locator(".landing-nav-cta").click();
   await page.locator(".page-content").waitFor();
