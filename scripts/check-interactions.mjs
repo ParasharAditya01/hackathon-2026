@@ -47,17 +47,29 @@ async function resetFromScenarios(page, accept) {
   }
 }
 
-async function createAllocation(page, quantity) {
+async function createAllocation(page, quantity, submitTwice = false) {
   await navigate(page, "Dispatch board");
   const form = page.locator("form.form-card").first();
   await form.getByLabel("Aid batch").selectOption("B-180");
   await form.getByLabel("Units to allocate").fill(String(quantity || 40));
   await form.getByLabel("Estimated travel (minutes)").fill("10");
   await form.getByLabel("Safety buffer (minutes)").fill("5");
-  await form.getByRole("button", { name: /Find feasible split/ }).click();
+  const submitButton = form.getByRole("button", { name: /Find feasible split/ });
+  if (submitTwice) {
+    await submitButton.evaluate(button => {
+      const formElement = button.closest("form");
+      formElement.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      formElement.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+  } else {
+    await submitButton.click();
+  }
   await navigate(page, "Reservations");
   const card = page.locator(".reservation-card").first();
   await card.waitFor();
+  if (submitTwice && await page.locator(".reservation-card").count() !== 1) {
+    throw new Error("Two rapid allocation submissions created duplicate reservations.");
+  }
   return card;
 }
 
@@ -192,7 +204,7 @@ try {
   console.log("PASS receiving-site form, resource controls, direct drop-off, demand edit, and status toggle");
 
   // Allocation must create reservations once; reservation and assignment buttons advance real state.
-  const allocationCard = await createAllocation(page, 40);
+  const allocationCard = await createAllocation(page, 40, true);
   await allocationCard.getByRole("button", { name: /Confirm claim/ }).click();
   await page.getByText("Reservation confirmation checked.").waitFor();
   await navigate(page, "Dispatch board");
