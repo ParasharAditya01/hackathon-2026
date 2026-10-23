@@ -296,6 +296,9 @@ try {
   }
   console.log("PASS reservation cancellation before pickup");
 
+  // Isolate the infeasible-plan assertion from inventory consumed by prior lifecycle checks.
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: "networkidle" });
   // An impossible travel estimate must be blocked, and the result shortcut must still work.
   await navigate(page, "Dispatch board");
   const impossibleForm = page.locator("form.form-card").first();
