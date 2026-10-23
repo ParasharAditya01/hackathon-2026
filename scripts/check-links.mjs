@@ -301,6 +301,8 @@ try {
   for (const name of ["Return to homepage", "Open operations", "Aid batches", "Dispatch board", "Resilience lab"]) {
     if (!(await page.getByRole("link", { name: new RegExp(name, "i") }).count())) throw new Error("404 recovery destination is missing: " + name);
   }
+  // Model a fresh homepage visit: the workspace flag is session-scoped and otherwise survives a full-page 404 recovery.
+  await page.evaluate(() => sessionStorage.removeItem("aidflow-entered"));
   await page.getByRole("link", { name: /Return to homepage/i }).click();
   await page.locator(".landing-page").waitFor();
   console.log("PASS custom 404 · unknown URL, explanatory copy, homepage and relevant-section recovery links");
