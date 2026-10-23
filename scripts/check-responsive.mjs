@@ -193,7 +193,7 @@ try {
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close mobile navigation");
       if (!(await menuButton.evaluate(element => element === document.activeElement))) throw new Error("Escape did not restore focus to the menu button");
       await menuButton.click();
-      await page.getByRole("button", { name: "Close navigation menu" }).last().click();
+      await page.locator(".mobile-drawer-close").click();
       await page.locator(".sidebar:not(.is-mobile-open)").waitFor();
       if (await menuButton.getAttribute("aria-expanded") !== "false") throw new Error("Drawer close button did not close navigation");
       await menuButton.click();
