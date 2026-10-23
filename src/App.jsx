@@ -112,7 +112,7 @@ function LandingPage({ onEnter, onExplore }) {
         <div className="landing-actions"><button className="landing-primary" onClick={onEnter}>Open operations workspace <ArrowRight size={16} /></button><button className="landing-secondary" onClick={onExplore}><Activity size={15} /> Explore the resilience demo</button></div>
         <div className="landing-proof"><span><ShieldCheck size={15} /> Deadline-aware allocation</span><span><Boxes size={15} /> Capacity-aware splits</span><span><RotateCcw size={15} /> Recovery when plans fail</span></div>
       </div>
-      <div className="route-illustration" aria-label="Illustration of aid moving from donor to rider to receiving site">
+      <div className="route-illustration">
         <div className="route-illustration-head"><span>THE AIDFLOW ROUTE</span><span className="route-demo-label">DEMO SCENARIO</span></div>
         <svg className="route-map-svg" viewBox="0 0 560 290" role="img" aria-label="A connected route links a donor parcel, rider handover, and shelter destination">
           <path className="route-map-grid" d="M0 50H560M0 100H560M0 150H560M0 200H560M0 250H560M70 0V290M140 0V290M210 0V290M280 0V290M350 0V290M420 0V290M490 0V290" />

@@ -126,6 +126,42 @@ try {
   if ((await page.title()) !== "AidFlow | Time-Critical Surplus & Civic Aid") throw new Error("Incorrect landing-page title: " + await page.title());
   console.log("PASS document title · landing page");
 
+  const imageAccessibility = await page.evaluate(() => {
+    const failures = [];
+    const images = [...document.querySelectorAll("img")].map((image) => ({
+      src: image.currentSrc || image.getAttribute("src") || "",
+      hasAlt: image.hasAttribute("alt"),
+      alt: image.getAttribute("alt"),
+    }));
+    for (const image of images) {
+      if (!image.hasAlt) failures.push("Image is missing an alt attribute: " + image.src);
+    }
+    const graphics = [...document.querySelectorAll("svg")].map((svg) => ({
+      className: typeof svg.className === "object" ? svg.className.baseVal : svg.className,
+      hidden: svg.getAttribute("aria-hidden") === "true",
+      role: svg.getAttribute("role"),
+      label: svg.getAttribute("aria-label") || svg.querySelector("title")?.textContent?.trim() || "",
+    }));
+    for (const graphic of graphics) {
+      if (!graphic.hidden && !(graphic.role === "img" && graphic.label)) {
+        failures.push("SVG is neither hidden as decorative nor given an accessible image role and name: " + graphic.className);
+      }
+    }
+    const routeIllustration = document.querySelector(".route-map-svg");
+    if (!routeIllustration || routeIllustration.getAttribute("role") !== "img" ||
+        routeIllustration.getAttribute("aria-label") !== "A connected route links a donor parcel, rider handover, and shelter destination") {
+      failures.push("The informative route illustration is missing its concise accessible description.");
+    }
+    const brandMarks = [...document.querySelectorAll(".aidflow-mark")];
+    if (!brandMarks.length || brandMarks.some((mark) => mark.getAttribute("aria-hidden") !== "true")) {
+      failures.push("AidFlow brand marks should be hidden from assistive technology because adjacent brand text names the link.");
+    }
+    return { images, graphics, failures };
+  });
+  if (imageAccessibility.failures.length) throw new Error("Image accessibility audit failed: " + imageAccessibility.failures.join("; "));
+  console.log("PASS image accessibility · " + imageAccessibility.images.length + " HTML images have alt attributes; " +
+    imageAccessibility.graphics.length + " SVG graphics are either decorative or have accessible names; informative route illustration is labelled.");
+ 
   const faviconLinks = await page.locator('link[rel~="icon"], link[rel="apple-touch-icon"]').evaluateAll((links) =>
     links.map((link) => ({ rel: link.rel, type: link.type, sizes: link.sizes, href: link.getAttribute("href") })),
   );
