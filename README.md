@@ -2,6 +2,10 @@
 
 AidFlow is a hackathon prototype for coordinating time-critical surplus food, short-life medical supplies, essential kits, volunteer riders, and receiving shelters. It treats safe-use deadlines, rider capacity, shelter demand, site compatibility, and unreliable reservations as operational constraints—not decorative dashboard metrics.
 
+> **Project status: interactive hackathon prototype, not a live logistics service.** The dispatch and inventory workflows run against synthetic records stored in the current browser. The repository includes a PostgreSQL schema and a health/readiness API foundation, but the workspace is not yet backed by PostgreSQL and has no secure user login or role-based access control. Do not use it to coordinate real food or medical deliveries.
+
+**Best demo path:** open the workspace, review the seeded aid batches and receiving-site demand, create a feasible split allocation on the Dispatch board, confirm a reservation, record pickup and transit, then run a failure scenario in the Resilience lab. Use **Reset scenario data** between demonstrations. All records are illustrative and browser-local.
+
 ## Run locally
 
 Requirements: Node.js 20+ and npm.
