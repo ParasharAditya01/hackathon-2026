@@ -157,7 +157,7 @@ try {
   await primaryEntryPage.close();
   const footerEntryPage = await context.newPage();
   await footerEntryPage.goto(baseURL, { waitUntil: "networkidle" });
-  const footerEntry = footerEntryPage.locator(".landing-footer").getByRole("button", { name: /Enter workspace/ });
+  const footerEntry = footerEntryPage.locator(".landing-footer").getByRole("button", { name: /Enter operations/ });
   await footerEntry.scrollIntoViewIfNeeded();
   await footerEntry.click();
   await footerEntryPage.locator(".page-content").waitFor();
