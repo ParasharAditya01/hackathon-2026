@@ -199,7 +199,29 @@ function LandingPage({ onEnter, onExplore }) {
         <details className="faq-item"><summary>Does AidFlow create user accounts or send notifications?</summary><div className="faq-answer"><p>The current interface does not provide user-facing account creation or sign-in. Its demo alerts and audit trail are part of the workspace simulation; do not assume they send SMS, email or push notifications.</p></div></details>
       </div>
     </section>
-    <footer className="landing-footer"><a href="#top" className="landing-footer-brand"><AidFlowMark /> AidFlow</a><span>Designed for the last mile. Built around safe handovers.</span><div className="landing-footer-actions"><a href="#faq">FAQ</a><a href="/privacy">Privacy policy</a><button onClick={onEnter}>Enter workspace <ArrowRight size={14} /></button></div></footer>
+    <footer className="landing-footer" aria-label="Site footer">
+      <div className="landing-footer-main">
+        <div className="landing-footer-about">
+          <a href="#top" className="landing-footer-brand" aria-label="AidFlow home"><span className="landing-footer-mark"><AidFlowMark /></span><span>AidFlow<span className="landing-wordmark-dot">.</span></span></a>
+          <p>Time-critical surplus and essential aid, coordinated around safer handovers.</p>
+          <span className="landing-footer-note">Demonstration prototype · Use synthetic data only</span>
+        </div>
+        <nav className="landing-footer-nav" aria-label="Footer navigation">
+          <span className="landing-footer-heading">Explore</span>
+          <a href="#top">Overview</a>
+          <a href="#faq">Frequently asked questions</a>
+          <button type="button" onClick={onEnter}>Enter operations <ArrowRight size={14} aria-hidden="true" /></button>
+        </nav>
+        <nav className="landing-footer-nav landing-footer-legal" aria-label="Legal">
+          <span className="landing-footer-heading">Information</span>
+          <a href="/privacy">Privacy policy</a>
+        </nav>
+      </div>
+      <div className="landing-footer-bottom">
+        <span>© {new Date().getFullYear()} AidFlow. All rights reserved.</span>
+        <span>Built for safer, more accountable civic aid coordination.</span>
+      </div>
+    </footer>
   </main>;
 }
 
@@ -669,7 +691,7 @@ export default function App() {
     <main className="main-content" id="overview"><header className="topbar">
       {isMobileNavViewport && <button ref={mobileMenuButtonRef} className="mobile-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileMenuOpen} aria-controls="primary-navigation-panel" onClick={() => setMobileMenuOpen(open => !open)}><span className="mobile-menu-icon" aria-hidden="true">{mobileMenuOpen ? <XCircle size={20} /> : <span className="hamburger-lines"><i /><i /><i /></span>}</span><span className="mobile-menu-label">{mobileMenuOpen ? "Close" : "Menu"}</span></button>}
       <div className="breadcrumb"><PageLink to="Overview" onNavigate={navigateTo} className="breadcrumb-home">AidFlow</PageLink><span className="breadcrumb-slash">/</span><strong aria-live="polite">{page}</strong></div><div className="topbar-right"><span className="environment-chip"><span className="status-dot" /> DEMO ENVIRONMENT</span><span className="topbar-avatar" aria-label="Operations user">AO</span></div>
-    </header><div className="page-wrap">{pageWithRelatedLinks}<footer className="app-footer"><div className="app-footer-main"><div className="app-footer-brand"><span className="app-footer-brand-name"><span className="footer-mark"><AidFlowMark /></span><strong>AidFlow</strong><span className="footer-separator">/</span><span>Civic micro-logistics</span></span><p>Moving surplus food and essential aid with safety-first coordination.</p><span className="app-footer-disclaimer">Prototype demo · Synthetic data · Browser-local state · No live dispatch</span></div><nav className="footer-nav" aria-label="Quick links"><PageLink to="Overview" onNavigate={navigateTo} className="footer-nav-link">Overview</PageLink><PageLink to="Aid batches" onNavigate={navigateTo} className="footer-nav-link">Aid batches</PageLink><PageLink to="Dispatch board" onNavigate={navigateTo} className="footer-nav-link">Dispatch board</PageLink><PageLink to="Reservations" onNavigate={navigateTo} className="footer-nav-link">Reservations</PageLink><PageLink to="Resilience lab" onNavigate={navigateTo} className="footer-nav-link">Resilience lab</PageLink></nav></div><div className="app-footer-bottom"><span>© {new Date().getFullYear()} AidFlow. All rights reserved.</span><span>Built for safer, more accountable civic aid coordination.</span><a href="/privacy">Privacy policy</a></div></footer></div></main>
+    </header><div className="page-wrap">{pageWithRelatedLinks}<footer className="app-footer"><div className="app-footer-main"><div className="app-footer-brand"><span className="app-footer-brand-name"><span className="footer-mark"><AidFlowMark /></span><strong>AidFlow</strong><span className="footer-separator">/</span><span>Civic micro-logistics</span></span><p>Moving surplus food and essential aid with safety-first coordination.</p><span className="app-footer-disclaimer">Prototype demo · Synthetic data · Browser-local state · No live dispatch</span></div><nav className="footer-nav" aria-label="Quick links"><PageLink to="Overview" onNavigate={navigateTo} className="footer-nav-link">Overview</PageLink><PageLink to="Aid batches" onNavigate={navigateTo} className="footer-nav-link">Aid batches</PageLink><PageLink to="Dispatch board" onNavigate={navigateTo} className="footer-nav-link">Dispatch board</PageLink><PageLink to="Reservations" onNavigate={navigateTo} className="footer-nav-link">Reservations</PageLink><PageLink to="Resilience lab" onNavigate={navigateTo} className="footer-nav-link">Resilience lab</PageLink></nav></div><div className="app-footer-bottom"><span>© {new Date().getFullYear()} AidFlow. All rights reserved.</span><span>Demo workspace · Synthetic data · No live dispatch</span><a href="/privacy">Privacy policy</a></div></footer></div></main>
     {toast && <div className={"toast-message " + (toastKind === "error" ? "toast-error" : "")} role={toastKind === "error" ? "alert" : "status"} aria-live={toastKind === "error" ? "assertive" : "polite"} aria-atomic="true">{toast}</div>}
   </div>;
 }
